@@ -6,11 +6,11 @@ import Button from '../components/Button';
 import { useCartStore } from '../store/useCartStore';
 
 export default function Cart() {
-  // חיבור לסטייט הגלובלי האמיתי שיצרת
+  // connect to the real global state store you created
   const { cart, updateQty, clearCart } = useCartStore();
   const navigate = useNavigate();
 
-  // חישוב סה"כ לתשלום על סמך הנתונים האמיתיים
+  // calculate the total payment based on real data
   const total = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
   
   const handleCheckout = () => {
@@ -20,7 +20,7 @@ export default function Cart() {
     navigate('/history');
   };
 
-  // תצוגת עגלה ריקה
+  // empty cart view
   if (cart.length === 0) return (
     <div className="text-center py-20 bg-white rounded-2xl border border-dashed animate-in fade-in" dir="rtl">
       <ShoppingCart size={64} className="mx-auto text-slate-200 mb-4" />
@@ -41,7 +41,7 @@ export default function Cart() {
       </header>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* רשימת המוצרים בעגלה */}
+        {/* cart items list */}
         <div className="lg:col-span-2 space-y-4">
           {cart.map(item => (
             <Card key={item.id} className="flex items-center gap-4">
@@ -72,7 +72,7 @@ export default function Cart() {
           ))}
         </div>
 
-        {/* סיכום הזמנה */}
+        {/* order summary */}
         <div className="space-y-4">
           <Card className="h-fit">
             <h3 className="text-xl font-bold mb-6 border-b pb-4 text-right">סיכום הזמנה</h3>
