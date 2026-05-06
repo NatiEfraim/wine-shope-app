@@ -2,6 +2,7 @@ import React from 'react';
 import { Plus } from 'lucide-react';
 import Card from '../components/Card';
 import Button from '../components/Button';
+import { useCartStore } from '../store/useCartStore';
 
 // Temporary mock data
 const INITIAL_PRODUCTS = [
@@ -11,8 +12,12 @@ const INITIAL_PRODUCTS = [
   { id: 4, name: "מהדורה מוגבלת - מרלו", price: 250, stock: 5, category: "אדום", image: "💎" },
 ];
 
-export default function Catalog({ onAddToCart }) {
+
+export default function Catalog() {
+  const addToCart = useCartStore((state) => state.addToCart);
+
   return (
+    
     <div className="animate-in fade-in duration-500">
       <header className="mb-10">
         <h2 className="text-3xl font-black text-slate-800 mb-2">יינות מובחרים</h2>
@@ -32,7 +37,7 @@ export default function Catalog({ onAddToCart }) {
               <span className={`text-xs ${product.stock < 10 ? 'text-red-500 font-bold' : 'text-slate-400'}`}>
                 מלאי זמין: {product.stock}
               </span>
-              <Button onClick={() => onAddToCart(product)} className="text-sm">
+              <Button onClick={() => addToCart(product)} className="text-sm">
                 <Plus size={16} /> הוסף לעגלה
               </Button>
             </div>
@@ -42,3 +47,4 @@ export default function Catalog({ onAddToCart }) {
     </div>
   );
 }
+

@@ -1,8 +1,13 @@
 import React from 'react';
 import { Link, Outlet } from 'react-router-dom';
 import { Package, ShoppingCart, Settings } from 'lucide-react';
+import { useCartStore } from '../store/useCartStore';
 
-export default function MainLayout({ cartCount, userRole, setUserRole }) {
+export default function MainLayout({ userRole, setUserRole }) {
+  const cartCount = useCartStore((state) => 
+  state.cart.reduce((total, item) => total + item.qty, 0)
+);
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans" dir="rtl">
       {/* Navbar */}
