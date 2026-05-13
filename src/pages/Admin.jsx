@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Truck, FileSpreadsheet, Settings, Mail, CheckCircle } from 'lucide-react';
+import { Truck, FileSpreadsheet, Settings, Mail, CheckCircle, Eye, X, Wine, MapPin, CreditCard, User } from 'lucide-react';
 import Card from '../components/Card';
 import Badge from '../components/Badge';
 import Button from '../components/Button';
@@ -15,13 +15,16 @@ export default function Admin() {
   });
   const [loading, setLoading] = useState(true);
   const [updatingStatus, setUpdatingStatus] = useState(null);
+  
+  // Modal states for order details
+  const [selectedBooking, setSelectedBooking] = useState(null);
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
 
   useEffect(() => {
     fetchBookings();
     fetchStats();
   }, []);
 
-  // Helper function to safely extract arrays from Laravel responses
   const extractArray = (data) => {
     if (!data) return [];
     if (Array.isArray(data)) return data;
@@ -41,37 +44,26 @@ export default function Admin() {
   const fetchStats = async () => {
     try {
       setLoading(true);
-      
-      // Fetch bookings for stats
       const bookingsResponse = await axiosInstance.get('/bookings');
       const bookingsData = extractArray(bookingsResponse.data);
 
-      // Calculate stats
       const totalOrders = bookingsData.length;
       const totalRevenue = bookingsData.reduce((sum, booking) => sum + parseFloat(booking.total_price || 0), 0);
 
-      // Fetch products for low stock count
       const productsResponse = await axiosInstance.get('/products');
       const productsData = extractArray(productsResponse.data);
       const lowStockProducts = productsData.filter(product => product.quantity < 10).length;
 
-      // Fetch users count (if available)
       let totalUsers = 0;
       try {
         const usersResponse = await axiosInstance.get('/users');
         const usersData = extractArray(usersResponse.data);
         totalUsers = usersData.length;
       } catch (error) {
-        // Users endpoint might not be accessible or limited by permissions
         console.log('Could not fetch users count');
       }
 
-      setStats({
-        totalOrders,
-        totalRevenue,
-        lowStockProducts,
-        totalUsers
-      });
+      setStats({ totalOrders, totalRevenue, lowStockProducts, totalUsers });
     } catch (error) {
       console.error('Error fetching stats:', error);
     } finally {
@@ -85,7 +77,6 @@ export default function Admin() {
       await axiosInstance.put(`/bookings/${bookingId}`, {
         status_id: newStatusId
       });
-      // Refresh bookings
       await fetchBookings();
       await fetchStats();
     } catch (error) {
@@ -94,6 +85,16 @@ export default function Admin() {
     } finally {
       setUpdatingStatus(null);
     }
+  };
+
+  const openBookingDetails = (booking) => {
+    setSelectedBooking(booking);
+    setIsDetailsModalOpen(true);
+  };
+
+  const closeDetailsModal = () => {
+    setIsDetailsModalOpen(false);
+    setTimeout(() => setSelectedBooking(null), 200);
   };
 
   const statusOptions = [
@@ -113,20 +114,20 @@ export default function Admin() {
   }
 
   return (
-    <div className="space-y-8 animate-in slide-in-from-bottom-4">
+    <div className="space-y-8 animate-in slide-in-from-bottom-4 relative">
       <header className="mb-10">
-        <h2 className="text-3xl font-black text-slate-800 mb-2">לוח בקרה - מנהל מערכת</h2>
-        <p className="text-slate-500 italic">ניהול מלאי, סטטוסים ודוחות מערכת</p>
+        <h2 className="text-3xl font-black text-slate-800 mb-2">לוח בקרה - ניהול מערכת</h2>
+        <p className="text-slate-500 italic">מעקב אחר פעילות החנות, הזמנות ומלאי</p>
       </header>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card className="bg-gradient-to-br from-red-800 to-red-950 text-white">
-          <p className="opacity-80 text-sm">סה"כ הזמנות (חודשי)</p>
+          <p className="opacity-80 text-sm">סה"כ הזמנות (כללי)</p>
           <h2 className="text-3xl font-bold">{stats.totalOrders}</h2>
         </Card>
         <Card>
-          <p className="text-slate-400 text-sm">הכנסות החודש</p>
-          <h2 className="text-3xl font-bold">₪{stats.totalRevenue.toFixed(2)}</h2>
+          <p className="text-slate-400 text-sm">הכנסות מצטברות</p>
+          <h2 className="text-3xl font-bold text-slate-800">₪{stats.totalRevenue.toFixed(2)}</h2>
         </Card>
         <Card>
           <p className="text-slate-400 text-sm">מוצרים במלאי נמוך</p>
@@ -134,25 +135,25 @@ export default function Admin() {
         </Card>
         <Card>
           <p className="text-slate-400 text-sm">לקוחות רשומים</p>
-          <h2 className="text-3xl font-bold">{stats.totalUsers}</h2>
+          <h2 className="text-3xl font-bold text-slate-800">{stats.totalUsers}</h2>
         </Card>
       </div>
 
       <Card>
-        <div className="flex justify-between items-center mb-6">
-          <h3 className="text-xl font-bold flex items-center gap-2">
-            <Truck size={20}/> ניהול הזמנות אחרונות
+        <div className="flex justify-between items-center mb-6 border-b pb-4">
+          <h3 className="text-xl font-bold flex items-center gap-2 text-slate-800">
+            <Truck size={20} className="text-red-800"/> ניהול הזמנות
           </h3>
           <div className="flex gap-2">
             <Button variant="secondary" className="text-xs">
-              <FileSpreadsheet size={16}/> ייצוא XLSX (S3)
+              <FileSpreadsheet size={16}/> ייצוא XLSX
             </Button>
           </div>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-right">
             <thead>
-              <tr className="border-b text-slate-400 text-sm">
+              <tr className="text-slate-400 text-sm border-b">
                 <th className="pb-3 pr-2">מזהה הזמנה</th>
                 <th className="pb-3">לקוח</th>
                 <th className="pb-3">סטטוס</th>
@@ -161,25 +162,39 @@ export default function Admin() {
               </tr>
             </thead>
             <tbody className="divide-y">
-              {bookings.slice(0, 10).map(booking => (
-                <tr key={booking.id} className="hover:bg-slate-50 transition-colors">
-                  <td className="py-4 font-medium">{booking.serial_number}</td>
-                  <td>{booking.user?.name || 'לא זמין'}</td>
-                  <td><Badge status={booking.status?.name || 'לא ידוע'} /></td>
-                  <td className="font-bold">₪{parseFloat(booking.total_price).toFixed(2)}</td>
+              {bookings.map(booking => (
+                <tr key={booking.id} className="hover:bg-slate-50 transition-colors group">
+                  <td className="py-4 font-bold text-slate-700">#{booking.serial_number}</td>
                   <td>
-                    <select
-                      className="bg-slate-100 border-none text-xs rounded p-1 disabled:opacity-50"
-                      disabled={updatingStatus === booking.id}
-                      value={booking.status_id || ''}
-                      onChange={(e) => updateBookingStatus(booking.id, parseInt(e.target.value))}
-                    >
-                      {statusOptions.map(status => (
-                        <option key={status.id} value={status.id}>
-                          {status.label}
-                        </option>
-                      ))}
-                    </select>
+                    <div className="flex flex-col">
+                      <span className="font-medium text-slate-800">{booking.user?.name}</span>
+                      <span className="text-xs text-slate-400">{booking.user?.email}</span>
+                    </div>
+                  </td>
+                  <td><Badge status={booking.status?.name || 'לא ידוע'} /></td>
+                  <td className="font-bold text-slate-800">₪{parseFloat(booking.total_price).toFixed(2)}</td>
+                  <td>
+                    <div className="flex items-center gap-2">
+                      <select
+                        className="bg-white border border-slate-200 text-xs rounded-lg p-1.5 focus:ring-1 focus:ring-red-800 outline-none"
+                        disabled={updatingStatus === booking.id}
+                        value={booking.status_id || ''}
+                        onChange={(e) => updateBookingStatus(booking.id, parseInt(e.target.value))}
+                      >
+                        {statusOptions.map(status => (
+                          <option key={status.id} value={status.id}>
+                            {status.label}
+                          </option>
+                        ))}
+                      </select>
+                      <button 
+                        onClick={() => openBookingDetails(booking)}
+                        className="p-1.5 text-slate-400 hover:text-red-800 hover:bg-red-50 rounded-lg transition-all"
+                        title="צפה בפרטים"
+                      >
+                        <Eye size={18} />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -187,6 +202,81 @@ export default function Admin() {
           </table>
         </div>
       </Card>
+
+      {/* Order Details Modal (Same logic as History.jsx) */}
+      {isDetailsModalOpen && selectedBooking && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden animate-in slide-in-from-bottom-4" dir="rtl">
+            
+            <div className="flex justify-between items-center p-6 border-b bg-slate-50">
+              <div>
+                <h3 className="font-black text-2xl text-slate-800">פרטי הזמנה #{selectedBooking.serial_number}</h3>
+                <p className="text-sm text-slate-500 mt-1">{new Date(selectedBooking.created_at).toLocaleString('he-IL')}</p>
+              </div>
+              <button onClick={closeDetailsModal} className="p-2 bg-white rounded-full text-slate-400 hover:text-red-600 shadow-sm">
+                <X size={20} />
+              </button>
+            </div>
+            
+            <div className="p-6 overflow-y-auto flex-1">
+              {/* Customer Info Section (Added for Admin view) */}
+              <div className="bg-red-50/50 p-4 rounded-xl border border-red-100 mb-6 flex items-start gap-4">
+                <div className="bg-red-800 text-white p-2 rounded-lg"><User size={20}/></div>
+                <div className="grid grid-cols-2 gap-x-12 gap-y-1 w-full">
+                  <div><p className="text-[10px] text-slate-400 font-bold uppercase">שם הלקוח</p><p className="font-bold text-slate-800">{selectedBooking.user?.name}</p></div>
+                  <div><p className="text-[10px] text-slate-400 font-bold uppercase">תעודת זהות</p><p className="font-bold text-slate-800">{selectedBooking.user?.personal_id}</p></div>
+                  <div><p className="text-[10px] text-slate-400 font-bold uppercase">אימייל</p><p className="font-medium text-slate-600 text-sm">{selectedBooking.user?.email}</p></div>
+                  <div><p className="text-[10px] text-slate-400 font-bold uppercase">טלפון</p><p className="font-medium text-slate-600 text-sm">{selectedBooking.user?.phone}</p></div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 mb-8">
+                 <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 flex items-start gap-3">
+                    <MapPin className="text-slate-400 mt-1" size={20} />
+                    <div>
+                      <p className="text-xs font-bold text-slate-400 uppercase">סטטוס נוכחי</p>
+                      <div className="mt-1"><Badge status={selectedBooking.status?.name} /></div>
+                    </div>
+                 </div>
+                 <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 flex items-start gap-3">
+                    <CreditCard className="text-slate-400 mt-1" size={20} />
+                    <div>
+                      <p className="text-xs font-bold text-slate-400 uppercase">סה"כ הזמנה</p>
+                      <p className="font-black text-lg text-slate-800">₪{parseFloat(selectedBooking.total_price).toFixed(2)}</p>
+                    </div>
+                 </div>
+              </div>
+
+              <h4 className="font-bold text-slate-800 mb-4 text-lg border-b pb-2">רשימת יינות בהזמנה</h4>
+              <div className="space-y-4">
+                {selectedBooking.items?.map((item, index) => (
+                  <div key={index} className="flex items-center gap-4 p-3 bg-white border border-slate-100 rounded-xl">
+                    <div className="w-14 h-14 bg-slate-50 rounded-lg flex items-center justify-center text-2xl shrink-0">
+                      {item.product?.image ? (
+                        <img src={item.product.image} alt={item.product?.name} className="w-full h-full object-contain" />
+                      ) : (
+                        <Wine className="text-red-800/40" size={24} />
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <h5 className="font-bold text-slate-800 leading-tight">{item.product?.name}</h5>
+                      <p className="text-xs text-slate-500">מחיר ליחידה: ₪{parseFloat(item.unit_price).toFixed(2)}</p>
+                    </div>
+                    <div className="text-left shrink-0">
+                      <p className="font-bold text-slate-800">₪{parseFloat(item.total_price).toFixed(2)}</p>
+                      <p className="text-[11px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded">כמות: {item.quantity}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            <div className="p-6 border-t bg-slate-50 flex justify-end">
+              <Button onClick={closeDetailsModal} variant="secondary">סגור</Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
