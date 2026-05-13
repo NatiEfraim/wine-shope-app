@@ -38,7 +38,7 @@ export default function MainLayout() {
                 </Link>
               )}
               
-              {isAuthenticated && user?.role === 'admin' && (
+              {isAuthenticated && user?.roles?.some(role => role.name === 'admin' || role.id === 1) && (
                 <Link to="/admin" className="transition-colors font-medium flex items-center gap-1 text-slate-500 hover:text-slate-800">
                   ממשק ניהול <Settings size={14}/>
                 </Link>

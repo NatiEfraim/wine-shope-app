@@ -2,71 +2,96 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { axiosInstance } from '../api/axios';
 
-const MOCK_USERS = {
-  admin: {
-    email: 'admin@wine.com',
-    password: 'password123',
-    response: {
-      user: { id: 1, name: 'Admin User', role: 'admin', email: 'admin@wine.com' },
-      token: 'mock-admin-token-789'
-    }
-  },
-  customer: {
-    email: 'user@wine.com',
-    password: 'password123',
-    response: {
-      user: { id: 2, name: 'Regular Customer', role: 'customer', email: 'user@wine.com' },
-      token: 'mock-customer-token-456'
-    }
-  }
-};
-
 export const useAuthStore = create(
   persist(
-    (set) => ({
-      user: null, 
-      token: null, // The persist middleware will handle localStorage automatically
+    (set, get) => ({
+      user: null,
       isAuthenticated: false,
       isLoading: false,
       error: null,
 
       login: async (email, password) => {
         set({ isLoading: true, error: null });
-        
+
         try {
-          await new Promise(resolve => setTimeout(resolve, 500));
+          // This sets the StoreApiToken cookie in the browser
+          await axiosInstance.post('/auth/login', {
+            email,
+            password,
+          });
 
-          let mockData = null;
-          if (email === MOCK_USERS.admin.email && password === MOCK_USERS.admin.password) {
-            mockData = MOCK_USERS.admin.response;
-          } else if (email === MOCK_USERS.customer.email && password === MOCK_USERS.customer.password) {
-            mockData = MOCK_USERS.customer.response;
-          }
+          // Now this request will automatically have the token injected by our Axios interceptor!
+          const userResponse = await axiosInstance.get('/auth/user');
+          const user = userResponse.data.data || userResponse.data;
 
-          if (mockData) {
-            const { user, token } = mockData;
-            // No need for manual localStorage.setItem, persist does it!
-            set({ user, token, isAuthenticated: true, isLoading: false });
-            return true;
-          } else {
-            throw new Error('Invalid email or password');
-          }
+          set({
+            user,
+            isAuthenticated: true,
+            isLoading: false
+          });
 
+          return true;
         } catch (error) {
-          set({ 
-            error: error.message || 'Login failed. Please try again.', 
-            isLoading: false 
+          const errorMessage = error.response?.data?.message || 'Login failed. Please try again.';
+          set({
+            error: errorMessage,
+            isLoading: false,
+            isAuthenticated: false
           });
           return false;
         }
       },
 
-      logout: () => {
-        set({ user: null, token: null, isAuthenticated: false });
+      register: async (userData) => {
+        set({ isLoading: true, error: null });
+
+        try {
+          await axiosInstance.post('/auth/register', userData);
+          return await get().login(userData.email, userData.password);
+        } catch (error) {
+          const errorMessage = error.response?.data?.message || 'Registration failed. Please try again.';
+          set({
+            error: errorMessage,
+            isLoading: false
+          });
+          return false;
+        }
+      },
+
+      logout: async () => {
+        try {
+          await axiosInstance.post('/auth/logout');
+          // Important: You might want to manually clear the cookie here just in case,
+          // though Netanel's backend uses Cookie::forget() which tells the browser to delete it.
+          document.cookie = 'StoreApiToken=; Max-Age=0; path=/;';
+        } catch (error) {
+          console.error('Logout error:', error);
+        } finally {
+          set({
+            user: null,
+            isAuthenticated: false
+          });
+        }
+      },
+
+      fetchUser: async () => {
+        try {
+          const userResponse = await axiosInstance.get('/auth/user');
+          const user = userResponse.data.data || userResponse.data;
+          set({ user, isAuthenticated: true });
+        } catch (error) {
+          console.error('Fetch user error:', error);
+          set({ user: null, isAuthenticated: false });
+        }
       }
     }),
     {
-      name: 'auth-storage', // name of item in localStorage
+      name: 'auth-storage',
+      // We only persist user state, token is handled by browser cookies
+      partialize: (state) => ({
+        user: state.user,
+        isAuthenticated: state.isAuthenticated
+      })
     }
   )
 );

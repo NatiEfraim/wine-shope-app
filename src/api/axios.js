@@ -1,8 +1,7 @@
 import axios from 'axios';
+import { useAuthStore } from '../store/useAuthStore';
 
-// here we define the address of Nataniel's server
-// for now we define a local URL; later we can change it to a real server address
-const BASE_URL = 'http://localhost:8000/api';
+const BASE_URL = '/api';
 
 export const axiosInstance = axios.create({
   baseURL: BASE_URL,
@@ -10,20 +9,45 @@ export const axiosInstance = axios.create({
     'Content-Type': 'application/json',
     'Accept': 'application/json',
   },
+  withCredentials: true,
 });
 
-// Interceptor - intercept requests
-// before each request goes to the server, we check if we have a token
-// if yes, we attach it to the request header so the server can recognize us
+// Helper function to extract a specific cookie by its name
+const getCookie = (name) => {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop().split(';').shift();
+  return null;
+};
+
+// Request Interceptor
 axiosInstance.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('auth_token');
+    // Read the token directly from the cookie Netanel sets
+    const token = getCookie('StoreApiToken');
+    
+    // If the cookie exists, inject it into the Authorization header!
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    
     return config;
   },
   (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Response Interceptor
+axiosInstance.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      useAuthStore.getState().logout();
+      if (window.location.pathname !== '/login') {
+         window.location.href = '/login';
+      }
+    }
     return Promise.reject(error);
   }
 );
