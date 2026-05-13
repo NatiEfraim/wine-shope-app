@@ -6,6 +6,7 @@ import Cart from './pages/Cart';
 import History from './pages/History';
 import Admin from './pages/Admin';
 import Login from './pages/Login';
+import Register from './pages/Register'; // הוספנו את השורה הזו!
 import ProtectedRoute from './components/ProtectedRoute';
 
 export default function App() {
@@ -15,6 +16,7 @@ export default function App() {
         {/* Public routes - Accessible to everyone */}
         <Route path="/" element={<Catalog />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
         
         {/* Protected routes - Requires authentication (Any logged-in user) */}
         <Route element={<ProtectedRoute />}>
