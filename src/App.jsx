@@ -7,6 +7,7 @@ import History from './pages/History';
 import Admin from './pages/Admin';
 import Login from './pages/Login';
 import Register from './pages/Register'; 
+import UserManagement from './pages/UserManagement';
 import ProtectedRoute from './components/ProtectedRoute';
 
 export default function App() {
@@ -27,6 +28,11 @@ export default function App() {
         {/* Admin routes - Requires Admin (1) or Moderator (2) roles */}
         <Route element={<ProtectedRoute allowedRoles={[1, 2]} />}>
           <Route path="/admin" element={<Admin />} />
+        </Route>
+
+        {/* Super Admin routes - Requires Admin (1) role ONLY */}
+        <Route element={<ProtectedRoute allowedRoles={[1]} />}>
+          <Route path="/admin/users" element={<UserManagement />} />
         </Route>
       </Route>
     </Routes>

@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Truck, FileSpreadsheet, Settings, Mail, CheckCircle, Eye, X, Wine, MapPin, CreditCard, User } from 'lucide-react';
+import { Truck, FileSpreadsheet, Settings, Mail, CheckCircle, Eye, X, Wine, MapPin, CreditCard, User, Users } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import Card from '../components/Card';
 import Badge from '../components/Badge';
 import Button from '../components/Button';
 import { axiosInstance } from '../api/axios';
+import { useAuthStore } from '../store/useAuthStore';
 
 export default function Admin() {
   const [bookings, setBookings] = useState([]);
@@ -19,6 +21,13 @@ export default function Admin() {
   // Modal states for order details
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+
+  // Navigation and Auth
+  const navigate = useNavigate();
+  const { user } = useAuthStore();
+  
+  // Check if user is Super Admin (Role ID 1)
+  const isSuperAdmin = user?.role?.some(r => r.id === 1);
 
   useEffect(() => {
     fetchBookings();
@@ -115,9 +124,18 @@ export default function Admin() {
 
   return (
     <div className="space-y-8 animate-in slide-in-from-bottom-4 relative">
-      <header className="mb-10">
-        <h2 className="text-3xl font-black text-slate-800 mb-2">לוח בקרה - ניהול מערכת</h2>
-        <p className="text-slate-500 italic">מעקב אחר פעילות החנות, הזמנות ומלאי</p>
+      <header className="mb-10 flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
+        <div>
+          <h2 className="text-3xl font-black text-slate-800 mb-2">לוח בקרה - ניהול מערכת</h2>
+          <p className="text-slate-500 italic">מעקב אחר פעילות החנות, הזמנות ומלאי</p>
+        </div>
+        
+        {/* Navigation button for super admins */}
+        {isSuperAdmin && (
+          <Button onClick={() => navigate('/admin/users')} className="flex items-center gap-2">
+            <Users size={18} /> ניהול משתמשים והרשאות
+          </Button>
+        )}
       </header>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -203,7 +221,7 @@ export default function Admin() {
         </div>
       </Card>
 
-      {/* Order Details Modal (Same logic as History.jsx) */}
+      {/* Order Details Modal */}
       {isDetailsModalOpen && selectedBooking && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden animate-in slide-in-from-bottom-4" dir="rtl">
@@ -219,7 +237,6 @@ export default function Admin() {
             </div>
             
             <div className="p-6 overflow-y-auto flex-1">
-              {/* Customer Info Section (Added for Admin view) */}
               <div className="bg-red-50/50 p-4 rounded-xl border border-red-100 mb-6 flex items-start gap-4">
                 <div className="bg-red-800 text-white p-2 rounded-lg"><User size={20}/></div>
                 <div className="grid grid-cols-2 gap-x-12 gap-y-1 w-full">
