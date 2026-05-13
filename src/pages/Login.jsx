@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Mail, Lock, LogIn, Wine } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuthStore } from '../store/useAuthStore';
 import Card from '../components/Card';
 import Button from '../components/Button';
@@ -80,7 +80,15 @@ export default function Login() {
                 <><LogIn size={20} /> התחברות</>
               )}
             </Button>
-          </form>
+         </form>
+
+          {/* Add this section right after the form closes */}
+          <div className="mt-6 text-center text-sm text-slate-500">
+            עדיין אין לכם חשבון?{' '}
+            <Link to="/register" className="text-red-800 font-bold hover:underline">
+              הירשמו עכשיו
+            </Link>
+          </div>
         </Card>
       </div>
     </div>
