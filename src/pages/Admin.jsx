@@ -21,10 +21,18 @@ export default function Admin() {
     fetchStats();
   }, []);
 
+  // Helper function to safely extract arrays from Laravel responses
+  const extractArray = (data) => {
+    if (!data) return [];
+    if (Array.isArray(data)) return data;
+    if (data.data && Array.isArray(data.data)) return data.data;
+    return [];
+  };
+
   const fetchBookings = async () => {
     try {
       const response = await axiosInstance.get('/bookings');
-      setBookings(response.data || []);
+      setBookings(extractArray(response.data));
     } catch (error) {
       console.error('Error fetching bookings:', error);
     }
@@ -33,9 +41,10 @@ export default function Admin() {
   const fetchStats = async () => {
     try {
       setLoading(true);
+      
       // Fetch bookings for stats
       const bookingsResponse = await axiosInstance.get('/bookings');
-      const bookingsData = bookingsResponse.data || [];
+      const bookingsData = extractArray(bookingsResponse.data);
 
       // Calculate stats
       const totalOrders = bookingsData.length;
@@ -43,16 +52,17 @@ export default function Admin() {
 
       // Fetch products for low stock count
       const productsResponse = await axiosInstance.get('/products');
-      const productsData = productsResponse.data || [];
+      const productsData = extractArray(productsResponse.data);
       const lowStockProducts = productsData.filter(product => product.quantity < 10).length;
 
       // Fetch users count (if available)
       let totalUsers = 0;
       try {
         const usersResponse = await axiosInstance.get('/users');
-        totalUsers = usersResponse.data?.length || 0;
+        const usersData = extractArray(usersResponse.data);
+        totalUsers = usersData.length;
       } catch (error) {
-        // Users endpoint might not be accessible
+        // Users endpoint might not be accessible or limited by permissions
         console.log('Could not fetch users count');
       }
 

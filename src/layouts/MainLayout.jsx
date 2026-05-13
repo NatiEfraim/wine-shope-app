@@ -17,6 +17,9 @@ export default function MainLayout() {
     navigate('/login');
   };
 
+  // Check if the user has an Admin (1) or Moderator (2) role
+  const isManagerOrAdmin = user?.role?.some(r => r.id === 1 || r.id === 2);
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans" dir="rtl">
       {/* Navbar */}
@@ -32,13 +35,15 @@ export default function MainLayout() {
                 חנות
               </Link>
               
+              {/* Visible to any logged-in user */}
               {isAuthenticated && (
                 <Link to="/history" className="transition-colors font-medium text-slate-500 hover:text-slate-800">
                   הזמנות שלי
                 </Link>
               )}
               
-              {isAuthenticated && user?.roles?.some(role => role.name === 'admin' || role.id === 1) && (
+              {/* Visible only to Admins and Moderators */}
+              {isManagerOrAdmin && (
                 <Link to="/admin" className="transition-colors font-medium flex items-center gap-1 text-slate-500 hover:text-slate-800">
                   ממשק ניהול <Settings size={14}/>
                 </Link>
