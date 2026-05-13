@@ -6,7 +6,7 @@ import Cart from './pages/Cart';
 import History from './pages/History';
 import Admin from './pages/Admin';
 import Login from './pages/Login';
-import Register from './pages/Register'; // הוספנו את השורה הזו!
+import Register from './pages/Register'; 
 import ProtectedRoute from './components/ProtectedRoute';
 
 export default function App() {

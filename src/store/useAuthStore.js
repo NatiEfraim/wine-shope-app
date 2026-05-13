@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { axiosInstance } from '../api/axios';
+import { useCartStore } from './useCartStore'; // cart store for clearing cart on logout
 
 export const useAuthStore = create(
   persist(
@@ -62,7 +63,7 @@ export const useAuthStore = create(
         try {
           await axiosInstance.post('/auth/logout');
           // Important: You might want to manually clear the cookie here just in case,
-          // though Netanel's backend uses Cookie::forget() which tells the browser to delete it.
+          // though backend uses Cookie::forget() which tells the browser to delete it.
           document.cookie = 'StoreApiToken=; Max-Age=0; path=/;';
         } catch (error) {
           console.error('Logout error:', error);
@@ -71,6 +72,9 @@ export const useAuthStore = create(
             user: null,
             isAuthenticated: false
           });
+          
+          // clear the cart when logging out to prevent stale data for the next user
+          useCartStore.getState().clearCart();
         }
       },
 
