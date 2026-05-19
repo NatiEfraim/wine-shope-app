@@ -5,10 +5,10 @@ import { useCartStore } from '../store/useCartStore';
 import { useAuthStore } from '../store/useAuthStore';
 
 export default function MainLayout() {
-  const cartCount = useCartStore((state) =>
+  const cartCount = useCartStore((state) => 
     state.cart.reduce((total, item) => total + item.qty, 0)
   );
-
+  
   const { isAuthenticated, user, logout } = useAuthStore();
   const navigate = useNavigate();
 
@@ -18,41 +18,29 @@ export default function MainLayout() {
   };
 
   return (
-    <div className="min-h-screen bg-boutique-cream text-boutique-ink font-sans" dir="rtl">
-      <nav className="sticky top-0 z-40 border-b border-boutique-linen/80 bg-boutique-cream/95 backdrop-blur-md">
-        <div className="mx-auto flex h-[4.25rem] max-w-7xl items-center justify-between px-4 sm:px-6">
+    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans" dir="rtl">
+      {/* Navbar */}
+      <nav className="bg-white border-b sticky top-0 z-40">
+        <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-8">
-            <Link
-              to="/"
-              className="flex items-center gap-2.5 font-serif text-2xl font-bold tracking-tight text-boutique-burgundy"
-            >
-              <Package size={26} strokeWidth={1.25} className="text-boutique-gold-muted" />
-              <span>WINE STORE</span>
+            <Link to="/" className="text-2xl font-black text-red-800 flex items-center gap-2">
+              <Package size={28}/> WINE STORE
             </Link>
-
-            <div className="hidden gap-7 md:flex">
-              <Link
-                to="/"
-                className="font-sans text-sm font-medium text-boutique-muted transition-colors hover:text-boutique-ink"
-              >
+            
+            <div className="hidden md:flex gap-6">
+              <Link to="/" className="transition-colors font-medium text-slate-500 hover:text-slate-800">
                 חנות
               </Link>
-
+              
               {isAuthenticated && (
-                <Link
-                  to="/history"
-                  className="font-sans text-sm font-medium text-boutique-muted transition-colors hover:text-boutique-ink"
-                >
+                <Link to="/history" className="transition-colors font-medium text-slate-500 hover:text-slate-800">
                   הזמנות שלי
                 </Link>
               )}
-
+              
               {isAuthenticated && user?.role === 'admin' && (
-                <Link
-                  to="/admin"
-                  className="flex items-center gap-1 font-sans text-sm font-medium text-boutique-muted transition-colors hover:text-boutique-ink"
-                >
-                  ממשק ניהול <Settings size={14} />
+                <Link to="/admin" className="transition-colors font-medium flex items-center gap-1 text-slate-500 hover:text-slate-800">
+                  ממשק ניהול <Settings size={14}/>
                 </Link>
               )}
             </div>
@@ -60,36 +48,26 @@ export default function MainLayout() {
 
           <div className="flex items-center gap-4">
             {isAuthenticated ? (
-              <div className="flex items-center gap-4 rounded-full border border-boutique-linen bg-white/60 px-3 py-1.5">
-                <span className="flex items-center gap-1.5 font-sans text-sm font-medium text-boutique-ink">
-                  <User size={16} className="text-boutique-muted" />
-                  {user?.name || 'אורח'}
-                </span>
-                <div className="h-4 w-px bg-boutique-linen" />
-                <button
-                  type="button"
-                  onClick={handleLogout}
-                  className="flex items-center gap-1 font-sans text-sm text-boutique-muted transition-colors hover:text-boutique-burgundy"
-                >
-                  <LogOut size={16} /> התנתק
-                </button>
-              </div>
+               <div className="flex items-center gap-4 bg-slate-50 px-3 py-1.5 rounded-full border border-slate-100">
+                 <span className="text-sm font-medium text-slate-700 flex items-center gap-1.5">
+                    <User size={16} className="text-slate-400" /> 
+                    {user?.name || 'אורח'}
+                 </span>
+                 <div className="w-px h-4 bg-slate-200"></div>
+                 <button onClick={handleLogout} className="text-sm text-slate-500 hover:text-red-700 flex items-center gap-1 transition-colors">
+                   <LogOut size={16}/> התנתק
+                 </button>
+               </div>
             ) : (
-              <Link
-                to="/login"
-                className="rounded-sm border border-boutique-burgundy/30 bg-boutique-burgundy px-4 py-2 font-sans text-sm font-medium text-boutique-cream transition-colors hover:bg-boutique-burgundy-dark"
-              >
-                התחברות
-              </Link>
+               <Link to="/login" className="text-sm font-bold text-red-800 bg-red-50 hover:bg-red-100 px-4 py-2 rounded-lg transition-colors">
+                 התחברות
+               </Link>
             )}
-
-            <Link
-              to="/cart"
-              className="relative rounded-full p-2 transition-colors hover:bg-boutique-parchment"
-            >
-              <ShoppingCart size={22} className="text-boutique-ink" strokeWidth={1.5} />
+            
+            <Link to="/cart" className="relative p-2 hover:bg-slate-100 rounded-full transition-colors mr-2">
+              <ShoppingCart size={24} className="text-slate-700" />
               {cartCount > 0 && (
-                <span className="absolute -right-0.5 -top-0.5 flex h-5 w-5 items-center justify-center rounded-full border-2 border-boutique-cream bg-boutique-burgundy font-sans text-[10px] font-bold text-white">
+                <span className="absolute -top-1 -right-1 bg-red-700 text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full border-2 border-white font-bold">
                   {cartCount}
                 </span>
               )}
@@ -98,16 +76,13 @@ export default function MainLayout() {
         </div>
       </nav>
 
-      <main className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
+      <main className="max-w-6xl mx-auto px-4 py-8">
         <Outlet />
       </main>
 
-      <footer className="mt-16 border-t border-boutique-linen bg-boutique-parchment/50 py-12">
-        <div className="mx-auto max-w-7xl px-4 text-center">
-          <p className="font-serif text-lg text-boutique-ink">WINE STORE</p>
-          <p className="mt-2 font-sans text-xs text-boutique-muted">
-            © 2026 Wine System — בוטיק יינות מובחרים
-          </p>
+      <footer className="mt-20 border-t py-12 bg-white">
+        <div className="max-w-6xl mx-auto px-4 text-center text-slate-400 text-sm">
+          <p>© 2026 Wine System - פרויקט גמר FSD</p>
         </div>
       </footer>
     </div>
