@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { ShoppingCart, Plus, Minus, ArrowRight } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import Card from '../components/Card';
@@ -6,30 +6,16 @@ import Button from '../components/Button';
 import { useCartStore } from '../store/useCartStore';
 
 export default function Cart() {
-  // Restored Moti's complete state management and API integration methods
-  const { cart, updateQty, clearCart, getTotalPrice, getTotalItems, checkout } = useCartStore();
-  const [isCheckingOut, setIsCheckingOut] = useState(false);
+  const { cart, updateQty, getTotalPrice, getTotalItems } = useCartStore();
   const navigate = useNavigate();
 
   const total = getTotalPrice();
   const totalItems = getTotalItems();
 
-  // Async checkout logic calling the real backend API
-  const handleCheckout = async () => {
+  // Navigate to the new checkout screen instead of processing the order here
+  const handleProceedToCheckout = () => {
     if (cart.length === 0) return;
-
-    setIsCheckingOut(true);
-    try {
-      const success = await checkout();
-      if (success) {
-        alert("הזמנה בוצעה בהצלחה! מייל אישור נשלח לכתובתך.");
-        navigate('/history');
-      }
-    } catch (error) {
-      console.error('Checkout error:', error);
-    } finally {
-      setIsCheckingOut(false);
-    }
+    navigate('/checkout');
   };
 
   // Empty cart view - merged with Meni's elegant styling
@@ -50,7 +36,7 @@ export default function Cart() {
     <div className="animate-in fade-in duration-500" dir="rtl">
       <header className="mb-10 text-right">
         <p className="mb-2 font-sans text-[10px] font-medium uppercase tracking-luxury text-boutique-gold-muted">
-          Checkout
+          Your Cart
         </p>
         <h2 className="font-serif text-4xl font-bold text-boutique-ink">עגלת הקניות שלך</h2>
       </header>
@@ -137,16 +123,15 @@ export default function Cart() {
             </div>
             
             <Button 
-              onClick={handleCheckout} 
-              disabled={isCheckingOut}
+              onClick={handleProceedToCheckout} 
               className="w-full py-4 text-lg shadow-[0_18px_35px_-18px_rgba(92,36,48,0.8)]"
             >
-              {isCheckingOut ? 'מעבד הזמנה...' : 'בצע הזמנה כעת'}
+              המשך לתשלום בטוח
             </Button>
           </Card>
           
           <Link to="/" className="block text-center text-sm text-boutique-muted transition-colors hover:text-boutique-burgundy">
-            המשך בקנייה
+            חזרה לקטלוג
           </Link>
         </div>
 
