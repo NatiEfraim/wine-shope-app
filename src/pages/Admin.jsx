@@ -116,18 +116,23 @@ export default function Admin() {
   if (loading) {
     return (
       <div className="text-center py-20">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-800 mx-auto"></div>
-        <p className="mt-4 text-slate-500">טוען נתונים...</p>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-boutique-burgundy mx-auto"></div>
+        <p className="mt-4 text-boutique-muted">טוען נתונים...</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-8 animate-in slide-in-from-bottom-4 relative">
-      <header className="mb-10 flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
+    <div className="space-y-8 animate-in fade-in duration-500 relative" dir="rtl">
+      <header className="mb-10 flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 border-b border-boutique-linen pb-6">
         <div>
-          <h2 className="text-3xl font-black text-slate-800 mb-2">לוח בקרה - ניהול מערכת</h2>
-          <p className="text-slate-500 italic">מעקב אחר פעילות החנות, הזמנות ומלאי</p>
+          <p className="mb-2 font-sans text-[10px] font-medium uppercase tracking-luxury text-boutique-gold-muted">
+            Management Dashboard
+          </p>
+          <h2 className="font-serif text-4xl font-bold text-boutique-ink mb-2">
+            לוח בקרה
+          </h2>
+          <p className="text-boutique-muted font-sans text-sm">מעקב אחר פעילות החנות, הזמנות ומלאי</p>
         </div>
         
         {/* Navigation button for super admins */}
@@ -138,63 +143,64 @@ export default function Admin() {
         )}
       </header>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="bg-gradient-to-br from-red-800 to-red-950 text-white">
-          <p className="opacity-80 text-sm">סה"כ הזמנות (כללי)</p>
-          <h2 className="text-3xl font-bold">{stats.totalOrders}</h2>
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <Card className="bg-boutique-charcoal border-boutique-gold/30 text-boutique-cream shadow-gold-ring p-6">
+          <p className="text-boutique-gold-light/80 text-sm font-sans mb-1">סה"כ הזמנות</p>
+          <h2 className="text-4xl font-serif font-bold text-boutique-cream">{stats.totalOrders}</h2>
         </Card>
-        <Card>
-          <p className="text-slate-400 text-sm">הכנסות מצטברות</p>
-          <h2 className="text-3xl font-bold text-slate-800">₪{stats.totalRevenue.toFixed(2)}</h2>
+        <Card className="p-6">
+          <p className="text-boutique-muted text-sm font-sans mb-1">הכנסות מצטברות</p>
+          <h2 className="text-4xl font-serif font-bold text-boutique-burgundy">₪{stats.totalRevenue.toFixed(2)}</h2>
         </Card>
-        <Card>
-          <p className="text-slate-400 text-sm">מוצרים במלאי נמוך</p>
-          <h2 className="text-3xl font-bold text-red-600">{stats.lowStockProducts}</h2>
+        <Card className="p-6">
+          <p className="text-boutique-muted text-sm font-sans mb-1">מוצרים במלאי נמוך</p>
+          <h2 className="text-4xl font-serif font-bold text-red-700">{stats.lowStockProducts}</h2>
         </Card>
-        <Card>
-          <p className="text-slate-400 text-sm">לקוחות רשומים</p>
-          <h2 className="text-3xl font-bold text-slate-800">{stats.totalUsers}</h2>
+        <Card className="p-6">
+          <p className="text-boutique-muted text-sm font-sans mb-1">לקוחות רשומים</p>
+          <h2 className="text-4xl font-serif font-bold text-boutique-ink">{stats.totalUsers}</h2>
         </Card>
       </div>
 
-      <Card>
-        <div className="flex justify-between items-center mb-6 border-b pb-4">
-          <h3 className="text-xl font-bold flex items-center gap-2 text-slate-800">
-            <Truck size={20} className="text-red-800"/> ניהול הזמנות
+      <Card className="overflow-hidden shadow-boutique mt-8">
+        <div className="flex justify-between items-center p-6 border-b border-boutique-linen bg-boutique-parchment/50">
+          <h3 className="font-serif text-2xl font-bold flex items-center gap-2 text-boutique-ink">
+            <Truck size={22} className="text-boutique-gold-muted" /> ניהול הזמנות
           </h3>
           <div className="flex gap-2">
-            <Button variant="secondary" className="text-xs">
+            <Button variant="secondary" className="text-xs bg-white">
               <FileSpreadsheet size={16}/> ייצוא XLSX
             </Button>
           </div>
         </div>
+        
         <div className="overflow-x-auto">
-          <table className="w-full text-right">
-            <thead>
-              <tr className="text-slate-400 text-sm border-b">
-                <th className="pb-3 pr-2">מזהה הזמנה</th>
-                <th className="pb-3">לקוח</th>
-                <th className="pb-3">סטטוס</th>
-                <th className="pb-3">סכום</th>
-                <th className="pb-3">פעולות</th>
+          <table className="w-full text-right font-sans">
+            <thead className="bg-boutique-cream">
+              <tr className="text-boutique-muted text-sm border-b border-boutique-linen">
+                <th className="py-4 pr-6 font-medium">מזהה הזמנה</th>
+                <th className="py-4 font-medium">לקוח</th>
+                <th className="py-4 font-medium">סטטוס</th>
+                <th className="py-4 font-medium">סכום</th>
+                <th className="py-4 font-medium">פעולות</th>
               </tr>
             </thead>
-            <tbody className="divide-y">
+            <tbody className="divide-y divide-boutique-linen bg-white">
               {bookings.map(booking => (
-                <tr key={booking.id} className="hover:bg-slate-50 transition-colors group">
-                  <td className="py-4 font-bold text-slate-700">#{booking.serial_number}</td>
-                  <td>
+                <tr key={booking.id} className="hover:bg-boutique-parchment/40 transition-colors group">
+                  <td className="py-4 pr-6 font-semibold text-boutique-ink">#{booking.serial_number}</td>
+                  <td className="py-4">
                     <div className="flex flex-col">
-                      <span className="font-medium text-slate-800">{booking.user?.name}</span>
-                      <span className="text-xs text-slate-400">{booking.user?.email}</span>
+                      <span className="font-medium text-boutique-ink">{booking.user?.name}</span>
+                      <span className="text-xs text-boutique-muted">{booking.user?.email}</span>
                     </div>
                   </td>
-                  <td><Badge status={booking.status?.name || 'לא ידוע'} /></td>
-                  <td className="font-bold text-slate-800">₪{parseFloat(booking.total_price).toFixed(2)}</td>
-                  <td>
-                    <div className="flex items-center gap-2">
+                  <td className="py-4"><Badge status={booking.status?.name || 'לא ידוע'} /></td>
+                  <td className="py-4 font-serif font-bold text-lg text-boutique-burgundy">₪{parseFloat(booking.total_price).toFixed(2)}</td>
+                  <td className="py-4">
+                    <div className="flex items-center gap-3">
                       <select
-                        className="bg-white border border-slate-200 text-xs rounded-lg p-1.5 focus:ring-1 focus:ring-red-800 outline-none"
+                        className="bg-white border border-boutique-linen text-xs rounded-sm p-2 focus:ring-1 focus:ring-boutique-gold focus:border-boutique-gold outline-none text-boutique-ink"
                         disabled={updatingStatus === booking.id}
                         value={booking.status_id || ''}
                         onChange={(e) => updateBookingStatus(booking.id, parseInt(e.target.value))}
@@ -207,7 +213,7 @@ export default function Admin() {
                       </select>
                       <button 
                         onClick={() => openBookingDetails(booking)}
-                        className="p-1.5 text-slate-400 hover:text-red-800 hover:bg-red-50 rounded-lg transition-all"
+                        className="p-1.5 text-boutique-muted hover:text-boutique-burgundy hover:bg-boutique-parchment rounded transition-all"
                         title="צפה בפרטים"
                       >
                         <Eye size={18} />
@@ -221,75 +227,90 @@ export default function Admin() {
         </div>
       </Card>
 
-      {/* Order Details Modal */}
+      {/* Order Details Modal with Boutique styling */}
       {isDetailsModalOpen && selectedBooking && (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden animate-in slide-in-from-bottom-4" dir="rtl">
+        <div className="fixed inset-0 bg-boutique-charcoal/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-boutique-cream rounded-sm shadow-2xl border border-boutique-gold/20 w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-300" dir="rtl">
             
-            <div className="flex justify-between items-center p-6 border-b bg-slate-50">
+            <div className="flex justify-between items-center p-6 border-b border-boutique-linen bg-white">
               <div>
-                <h3 className="font-black text-2xl text-slate-800">פרטי הזמנה #{selectedBooking.serial_number}</h3>
-                <p className="text-sm text-slate-500 mt-1">{new Date(selectedBooking.created_at).toLocaleString('he-IL')}</p>
+                <h3 className="font-serif font-bold text-2xl text-boutique-ink">פרטי הזמנה #{selectedBooking.serial_number}</h3>
+                <p className="text-sm text-boutique-muted mt-1 font-sans">{new Date(selectedBooking.created_at).toLocaleString('he-IL')}</p>
               </div>
-              <button onClick={closeDetailsModal} className="p-2 bg-white rounded-full text-slate-400 hover:text-red-600 shadow-sm">
+              <button onClick={closeDetailsModal} className="p-2 bg-boutique-parchment rounded-full text-boutique-muted hover:text-boutique-burgundy transition-colors">
                 <X size={20} />
               </button>
             </div>
             
-            <div className="p-6 overflow-y-auto flex-1">
-              <div className="bg-red-50/50 p-4 rounded-xl border border-red-100 mb-6 flex items-start gap-4">
-                <div className="bg-red-800 text-white p-2 rounded-lg"><User size={20}/></div>
-                <div className="grid grid-cols-2 gap-x-12 gap-y-1 w-full">
-                  <div><p className="text-[10px] text-slate-400 font-bold uppercase">שם הלקוח</p><p className="font-bold text-slate-800">{selectedBooking.user?.name}</p></div>
-                  <div><p className="text-[10px] text-slate-400 font-bold uppercase">תעודת זהות</p><p className="font-bold text-slate-800">{selectedBooking.user?.personal_id}</p></div>
-                  <div><p className="text-[10px] text-slate-400 font-bold uppercase">אימייל</p><p className="font-medium text-slate-600 text-sm">{selectedBooking.user?.email}</p></div>
-                  <div><p className="text-[10px] text-slate-400 font-bold uppercase">טלפון</p><p className="font-medium text-slate-600 text-sm">{selectedBooking.user?.phone}</p></div>
+            <div className="p-6 overflow-y-auto flex-1 font-sans">
+              
+              {/* Customer Info Box */}
+              <div className="bg-white p-5 rounded-sm border border-boutique-linen mb-6 flex items-start gap-4 shadow-sm">
+                <div className="bg-boutique-burgundy text-boutique-cream p-3 rounded-full shrink-0"><User size={20}/></div>
+                <div className="grid grid-cols-2 gap-x-12 gap-y-3 w-full">
+                  <div>
+                    <p className="text-[10px] text-boutique-gold-muted font-medium uppercase tracking-luxury">שם הלקוח</p>
+                    <p className="font-semibold text-boutique-ink">{selectedBooking.user?.name}</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-boutique-gold-muted font-medium uppercase tracking-luxury">ת.ז.</p>
+                    <p className="font-semibold text-boutique-ink">{selectedBooking.user?.personal_id}</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-boutique-gold-muted font-medium uppercase tracking-luxury">אימייל</p>
+                    <p className="text-sm text-boutique-ink">{selectedBooking.user?.email}</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-boutique-gold-muted font-medium uppercase tracking-luxury">טלפון</p>
+                    <p className="text-sm text-boutique-ink">{selectedBooking.user?.phone}</p>
+                  </div>
                 </div>
               </div>
 
+              {/* Status & Total Info */}
               <div className="grid grid-cols-2 gap-4 mb-8">
-                 <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 flex items-start gap-3">
-                    <MapPin className="text-slate-400 mt-1" size={20} />
+                 <div className="bg-white p-5 rounded-sm border border-boutique-linen flex items-start gap-3 shadow-sm">
+                    <MapPin className="text-boutique-gold-muted mt-1" size={20} />
                     <div>
-                      <p className="text-xs font-bold text-slate-400 uppercase">סטטוס נוכחי</p>
-                      <div className="mt-1"><Badge status={selectedBooking.status?.name} /></div>
+                      <p className="text-[10px] text-boutique-gold-muted font-medium uppercase tracking-luxury mb-1">סטטוס נוכחי</p>
+                      <div><Badge status={selectedBooking.status?.name} /></div>
                     </div>
                  </div>
-                 <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 flex items-start gap-3">
-                    <CreditCard className="text-slate-400 mt-1" size={20} />
+                 <div className="bg-white p-5 rounded-sm border border-boutique-linen flex items-start gap-3 shadow-sm">
+                    <CreditCard className="text-boutique-gold-muted mt-1" size={20} />
                     <div>
-                      <p className="text-xs font-bold text-slate-400 uppercase">סה"כ הזמנה</p>
-                      <p className="font-black text-lg text-slate-800">₪{parseFloat(selectedBooking.total_price).toFixed(2)}</p>
+                      <p className="text-[10px] text-boutique-gold-muted font-medium uppercase tracking-luxury mb-1">סה"כ הזמנה</p>
+                      <p className="font-serif font-bold text-2xl text-boutique-burgundy">₪{parseFloat(selectedBooking.total_price).toFixed(2)}</p>
                     </div>
                  </div>
               </div>
 
-              <h4 className="font-bold text-slate-800 mb-4 text-lg border-b pb-2">רשימת יינות בהזמנה</h4>
-              <div className="space-y-4">
+              <h4 className="font-serif font-bold text-boutique-ink mb-4 text-xl border-b border-boutique-linen pb-2">רשימת יינות בהזמנה</h4>
+              <div className="space-y-3">
                 {selectedBooking.items?.map((item, index) => (
-                  <div key={index} className="flex items-center gap-4 p-3 bg-white border border-slate-100 rounded-xl">
-                    <div className="w-14 h-14 bg-slate-50 rounded-lg flex items-center justify-center text-2xl shrink-0">
+                  <div key={index} className="flex items-center gap-4 p-3 bg-white border border-boutique-linen rounded-sm">
+                    <div className="w-16 h-20 bg-boutique-parchment flex items-center justify-center shrink-0 border border-boutique-linen/50 overflow-hidden">
                       {item.product?.image ? (
-                        <img src={item.product.image} alt={item.product?.name} className="w-full h-full object-contain" />
+                        <img src={item.product.image} alt={item.product?.name} className="w-full h-full object-cover" />
                       ) : (
-                        <Wine className="text-red-800/40" size={24} />
+                        <Wine className="text-boutique-gold-muted/40" size={24} />
                       )}
                     </div>
                     <div className="flex-1">
-                      <h5 className="font-bold text-slate-800 leading-tight">{item.product?.name}</h5>
-                      <p className="text-xs text-slate-500">מחיר ליחידה: ₪{parseFloat(item.unit_price).toFixed(2)}</p>
+                      <h5 className="font-serif font-bold text-lg text-boutique-ink leading-tight">{item.product?.name}</h5>
+                      <p className="text-sm text-boutique-muted mt-1">מחיר ליחידה: ₪{parseFloat(item.unit_price).toFixed(2)}</p>
                     </div>
                     <div className="text-left shrink-0">
-                      <p className="font-bold text-slate-800">₪{parseFloat(item.total_price).toFixed(2)}</p>
-                      <p className="text-[11px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded">כמות: {item.quantity}</p>
+                      <p className="font-serif font-bold text-xl text-boutique-burgundy">₪{parseFloat(item.total_price).toFixed(2)}</p>
+                      <p className="text-[11px] font-medium text-boutique-muted mt-1 border border-boutique-linen px-2 py-0.5 rounded-sm text-center inline-block">כמות: {item.quantity}</p>
                     </div>
                   </div>
                 ))}
               </div>
             </div>
             
-            <div className="p-6 border-t bg-slate-50 flex justify-end">
-              <Button onClick={closeDetailsModal} variant="secondary">סגור</Button>
+            <div className="p-5 border-t border-boutique-linen bg-white flex justify-end">
+              <Button onClick={closeDetailsModal} variant="secondary">סגור חלונית</Button>
             </div>
           </div>
         </div>

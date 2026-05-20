@@ -55,59 +55,62 @@ export default function UserManagement() {
   if (loading) {
     return (
       <div className="text-center py-20">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-800 mx-auto"></div>
-        <p className="mt-4 text-slate-500">טוען משתמשים...</p>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-boutique-burgundy mx-auto"></div>
+        <p className="mt-4 text-boutique-muted">טוען רשימת משתמשים...</p>
       </div>
     );
   }
 
   return (
-    <div className="animate-in fade-in duration-500">
-      <header className="mb-10">
-        <h2 className="text-3xl font-black text-slate-800 mb-2 flex items-center gap-3">
-          <Shield className="text-red-800" size={32} /> ניהול הרשאות ומשתמשים
+    <div className="animate-in fade-in duration-500" dir="rtl">
+      <header className="mb-12 border-b border-boutique-linen pb-6">
+        <p className="mb-2 font-sans text-[10px] font-medium uppercase tracking-luxury text-boutique-gold-muted">
+          System Access Control
+        </p>
+        <h2 className="font-serif text-4xl font-bold text-boutique-ink mb-2 flex items-center gap-3">
+          <Shield className="text-boutique-gold-muted" size={32} /> ניהול הרשאות ומשתמשים
         </h2>
-        <p className="text-slate-500 italic">צפייה בכלל המשתמשים וניהול רמות הגישה במערכת (אדמין בלבד)</p>
+        <p className="text-boutique-muted font-sans text-sm">צפייה בכלל המשתמשים וניהול רמות הגישה במערכת (הרשאת מנהל על בלבד)</p>
       </header>
 
-      <Card>
+      <Card className="shadow-boutique">
         <div className="overflow-x-auto">
-          <table className="w-full text-right">
-            <thead>
-              <tr className="border-b text-slate-400 text-sm">
-                <th className="pb-3 pr-2">מזהה</th>
-                <th className="pb-3">פרטי משתמש</th>
-                <th className="pb-3">תעודת זהות</th>
-                <th className="pb-3">הרשאה (תפקיד)</th>
+          <table className="w-full text-right font-sans">
+            <thead className="bg-boutique-parchment/50">
+              <tr className="border-b border-boutique-linen text-boutique-muted text-sm">
+                <th className="py-4 pr-6 font-medium">מזהה</th>
+                <th className="py-4 font-medium">פרטי משתמש</th>
+                <th className="py-4 font-medium">תעודת זהות</th>
+                <th className="py-4 font-medium pl-6">הרשאה (תפקיד)</th>
               </tr>
             </thead>
-            <tbody className="divide-y">
+            <tbody className="divide-y divide-boutique-linen bg-white">
               {users.map(user => {
                 const userRole = user.roles && user.roles.length > 0 ? user.roles[0].id : '';
                 const isSelf = currentUser?.id === user.id;
 
                 return (
-                  <tr key={user.id} className="hover:bg-slate-50 transition-colors">
-                    <td className="py-4 font-bold text-slate-700">{user.id}</td>
-                    <td>
+                  <tr key={user.id} className="hover:bg-boutique-parchment/30 transition-colors">
+                    <td className="py-4 pr-6 font-semibold text-boutique-ink">{user.id}</td>
+                    <td className="py-4">
                       <div className="flex flex-col">
-                        <span className="font-bold text-slate-800 flex items-center gap-2">
-                          <Users size={14} className="text-slate-400"/> {user.name}
+                        <span className="font-semibold text-boutique-ink flex items-center gap-2">
+                          <Users size={14} className="text-boutique-gold-muted"/> {user.name}
                         </span>
-                        <span className="text-xs text-slate-500 flex items-center gap-1 mt-1">
+                        <span className="text-xs text-boutique-muted flex items-center gap-1 mt-1">
                           <Mail size={12}/> {user.email}
                         </span>
                       </div>
                     </td>
-                    <td>
-                      <span className="text-sm text-slate-600 flex items-center gap-1">
-                        <CreditCard size={14} className="text-slate-400"/> {user.personal_id}
+                    <td className="py-4">
+                      <span className="text-sm text-boutique-ink flex items-center gap-1.5">
+                        <CreditCard size={14} className="text-boutique-gold-muted"/> {user.personal_id}
                       </span>
                     </td>
-                    <td>
+                    <td className="py-4 pl-6">
                       <select
-                        className={`border border-slate-200 text-sm rounded-lg p-2 outline-none ${
-                          isSelf ? 'bg-slate-100 cursor-not-allowed opacity-60' : 'bg-white focus:ring-1 focus:ring-red-800 cursor-pointer'
+                        className={`border border-boutique-linen text-sm rounded-sm p-2 outline-none w-full max-w-[200px] ${
+                          isSelf ? 'bg-boutique-parchment cursor-not-allowed opacity-60 text-boutique-muted' : 'bg-white focus:border-boutique-gold focus:ring-1 focus:ring-boutique-gold cursor-pointer text-boutique-ink'
                         }`}
                         disabled={updatingId === user.id || isSelf}
                         value={userRole}
@@ -120,7 +123,7 @@ export default function UserManagement() {
                           </option>
                         ))}
                       </select>
-                      {isSelf && <span className="text-[10px] text-red-600 ml-2 block mt-1">זהו המשתמש שלך</span>}
+                      {isSelf && <span className="text-[10px] text-boutique-burgundy font-medium ml-2 block mt-1">זהו המשתמש שלך</span>}
                     </td>
                   </tr>
                 );
