@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Edit, Trash2, X, PlusCircle } from 'lucide-react';
-import Card from '../components/Card';
+import { X, PlusCircle } from 'lucide-react';
+import { WineProductCard } from '../components/Card';
 import Button from '../components/Button';
+import WineCarousel from '../components/WineCarousel';
 import { useCartStore } from '../store/useCartStore';
 import { useAuthStore } from '../store/useAuthStore';
 import { axiosInstance } from '../api/axios';
 
 export default function Catalog() {
+  // API States
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -110,8 +112,8 @@ export default function Catalog() {
   if (loading) {
     return (
       <div className="text-center py-20">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-800 mx-auto"></div>
-        <p className="mt-4 text-slate-500">טוען מוצרים...</p>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-boutique-burgundy mx-auto"></div>
+        <p className="mt-4 text-boutique-muted">טוען את הקולקציה שלנו...</p>
       </div>
     );
   }
@@ -128,147 +130,110 @@ export default function Catalog() {
   }
 
   return (
-    <div className="animate-in fade-in duration-500">
-      <header className="mb-10 flex justify-between items-end">
-        <div>
-          <h2 className="text-3xl font-black text-slate-800 mb-2">יינות מובחרים</h2>
-          <p className="text-slate-500 italic">בחרו את היין המושלם עבורכם מתוך הקולקציה שלנו</p>
+    <section className="animate-in fade-in duration-700">
+      
+      {/* Wine Carousel takes full width */}
+      <div className="relative left-1/2 right-1/2 -mx-[50vw] -mt-12 mb-12 w-screen">
+        <WineCarousel />
+      </div>
+
+      {/* Styled Header integrated with Admin Actions */}
+      <header className="mb-12 flex flex-col md:flex-row md:items-end md:justify-between gap-4 border-b border-boutique-linen/50 pb-6">
+        <div className="text-right">
+          <p className="mb-2 font-sans text-[10px] font-medium uppercase tracking-luxury text-boutique-gold-muted">
+            הקולקציה שלנו
+          </p>
+          <h2 className="font-serif text-4xl font-bold text-boutique-ink md:text-5xl">
+            יינות מובחרים
+          </h2>
         </div>
         
         {/* Only Managers and Admins can see this button */}
         {isManagerOrAdmin && (
-          <Button onClick={openAddModal} className="flex items-center gap-2">
-            <PlusCircle size={18} /> הוסף מוצר חדש
-          </Button>
+          <button 
+            onClick={openAddModal} 
+            className="flex items-center justify-center gap-2 rounded bg-boutique-charcoal px-6 py-2.5 font-sans text-sm font-medium text-boutique-cream transition-all hover:bg-boutique-ink"
+          >
+            <PlusCircle size={18} /> 
+            הוסף מוצר חדש
+          </button>
         )}
       </header>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {products.map(product => (
-          <Card key={product.id} className="hover:shadow-md transition-shadow relative overflow-hidden">
-            
-            {/* Admin Controls overlay */}
-            {isManagerOrAdmin && (
-              <div className="absolute top-2 right-2 flex gap-1 z-10">
-                <button 
-                  onClick={() => openEditModal(product)}
-                  className="p-2 bg-white/90 shadow rounded-md text-slate-600 hover:text-blue-600 transition-colors"
-                  title="ערוך מוצר"
-                >
-                  <Edit size={16} />
-                </button>
-                <button 
-                  onClick={() => handleDelete(product.id)}
-                  className="p-2 bg-white/90 shadow rounded-md text-slate-600 hover:text-red-600 transition-colors"
-                  title="מחק מוצר"
-                >
-                  <Trash2 size={16} />
-                </button>
-              </div>
-            )}
-
-            <div className="text-5xl mb-4 bg-slate-50 p-6 rounded-lg text-center mt-4">
-              {product.image ? (
-                <img src={product.image} alt={product.name} className="w-full h-16 object-contain" />
-              ) : (
-                "🍷"
-              )}
-            </div>
-            
-            <div className="flex justify-between items-start mb-2">
-              <h3 className="font-bold text-lg text-slate-800">{product.name}</h3>
-              <div className="text-left">
-                {product.discount > 0 ? (
-                  <>
-                    <span className="text-red-800 font-bold">₪{product.price_after_discount || (product.price - product.discount)}</span>
-                    <span className="text-sm text-slate-400 line-through ml-2">₪{product.price}</span>
-                  </>
-                ) : (
-                  <span className="text-red-800 font-bold">₪{product.price}</span>
-                )}
-              </div>
-            </div>
-            
-            {product.description && (
-              <p className="text-sm text-slate-600 mb-2 truncate">{product.description}</p>
-            )}
-            
-            <div className="flex items-center justify-between mt-4">
-              <span className={`text-xs ${product.quantity < 10 ? 'text-red-500 font-bold' : 'text-slate-400'}`}>
-                מלאי זמין: {product.quantity}
-              </span>
-              <Button
-                onClick={() => addToCart(product)}
-                disabled={product.quantity === 0}
-                className="text-sm"
-              >
-                <Plus size={16} /> הוסף לעגלה
-              </Button>
-            </div>
-          </Card>
+      {/* Main Grid mapping dynamic API products to Meni's card */}
+      <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        {products.map((product) => (
+          <WineProductCard
+            key={product.id}
+            product={product}
+            onAddToCart={addToCart}
+            isAdmin={isManagerOrAdmin}
+            onEdit={openEditModal}
+            onDelete={handleDelete}
+          />
         ))}
       </div>
 
-      {/* Add/Edit Product Modal */}
+      {/* Add/Edit Product Modal (Unchanged logical structure, slightly refined colors) */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden" dir="rtl">
-            <div className="flex justify-between items-center p-4 border-b">
-              <h3 className="font-bold text-lg text-slate-800">
+        <div className="fixed inset-0 bg-boutique-charcoal/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+          <div className="bg-boutique-cream rounded-sm border border-boutique-gold/20 shadow-2xl w-full max-w-md overflow-hidden" dir="rtl">
+            <div className="flex justify-between items-center p-4 border-b border-boutique-linen">
+              <h3 className="font-serif text-xl font-bold text-boutique-ink">
                 {editingProduct ? 'עריכת מוצר' : 'הוספת מוצר חדש'}
               </h3>
-              <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-700">
+              <button onClick={() => setIsModalOpen(false)} className="text-boutique-muted hover:text-boutique-burgundy transition-colors">
                 <X size={20} />
               </button>
             </div>
             
-            <form onSubmit={handleModalSubmit} className="p-4 space-y-4">
+            <form onSubmit={handleModalSubmit} className="p-5 space-y-4">
               <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1">שם המוצר</label>
+                <label className="block text-sm font-bold text-boutique-ink mb-1">שם המוצר</label>
                 <input 
                   type="text" name="name" required value={formData.name} onChange={handleFormChange}
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-800 outline-none"
+                  className="w-full px-3 py-2 border border-boutique-linen rounded bg-white focus:border-boutique-gold focus:ring-1 focus:ring-boutique-gold outline-none transition-all"
                 />
               </div>
               
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-1">מחיר מקורי (₪)</label>
+                  <label className="block text-sm font-bold text-boutique-ink mb-1">מחיר מקורי (₪)</label>
                   <input 
                     type="number" step="0.01" name="price" required value={formData.price} onChange={handleFormChange}
-                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-800 outline-none"
+                    className="w-full px-3 py-2 border border-boutique-linen rounded bg-white focus:border-boutique-gold focus:ring-1 focus:ring-boutique-gold outline-none transition-all"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-1">הנחה (₪)</label>
+                  <label className="block text-sm font-bold text-boutique-ink mb-1">הנחה (₪)</label>
                   <input 
                     type="number" step="0.01" name="discount" value={formData.discount} onChange={handleFormChange}
-                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-800 outline-none"
+                    className="w-full px-3 py-2 border border-boutique-linen rounded bg-white focus:border-boutique-gold focus:ring-1 focus:ring-boutique-gold outline-none transition-all"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1">כמות במלאי</label>
+                <label className="block text-sm font-bold text-boutique-ink mb-1">כמות במלאי</label>
                 <input 
                   type="number" name="quantity" required value={formData.quantity} onChange={handleFormChange}
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-800 outline-none"
+                  className="w-full px-3 py-2 border border-boutique-linen rounded bg-white focus:border-boutique-gold focus:ring-1 focus:ring-boutique-gold outline-none transition-all"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1">תיאור</label>
+                <label className="block text-sm font-bold text-boutique-ink mb-1">תיאור</label>
                 <textarea 
                   name="description" rows="3" value={formData.description} onChange={handleFormChange}
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-800 outline-none resize-none"
+                  className="w-full px-3 py-2 border border-boutique-linen rounded bg-white focus:border-boutique-gold focus:ring-1 focus:ring-boutique-gold outline-none resize-none transition-all"
                 ></textarea>
               </div>
 
-              <div className="pt-4 flex gap-2">
-                <Button type="submit" className="w-full">
+              <div className="pt-4 flex gap-3">
+                <Button type="submit" className="flex-1 bg-boutique-burgundy hover:bg-boutique-burgundy-dark text-white border-none">
                   {editingProduct ? 'שמור שינויים' : 'צור מוצר'}
                 </Button>
-                <Button type="button" variant="secondary" onClick={() => setIsModalOpen(false)} className="w-full">
+                <Button type="button" variant="secondary" onClick={() => setIsModalOpen(false)} className="flex-1 border-boutique-linen hover:bg-boutique-linen/30">
                   ביטול
                 </Button>
               </div>
@@ -276,6 +241,6 @@ export default function Catalog() {
           </div>
         </div>
       )}
-    </div>
+    </section>
   );
 }
