@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import Card from '../components/Card';
 import Badge from '../components/Badge';
 import Button from '../components/Button';
+import DashboardCharts from '../components/DashboardCharts';
 import { axiosInstance } from '../api/axios';
 import { useAuthStore } from '../store/useAuthStore';
 
@@ -161,6 +162,8 @@ export default function Admin() {
           <h2 className="text-4xl font-serif font-bold text-boutique-ink">{stats.totalUsers}</h2>
         </Card>
       </div>
+
+      <DashboardCharts bookings={bookings} />
 
       <Card className="overflow-hidden shadow-boutique mt-8">
         <div className="flex justify-between items-center p-6 border-b border-boutique-linen bg-boutique-parchment/50">
