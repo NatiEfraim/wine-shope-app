@@ -1,17 +1,27 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import MainLayout from './layouts/MainLayout';
 import Catalog from './pages/Catalog';
-import Cart from './pages/Cart';
-import History from './pages/History';
-import Admin from './pages/Admin';
 import Login from './pages/Login';
-import Register from './pages/Register'; 
-import UserManagement from './pages/UserManagement';
-import Checkout from './pages/Checkout';
-import CheckoutSuccess from './pages/CheckoutSuccess';
 import ProtectedRoute from './components/ProtectedRoute';
+
+const Cart = lazy(() => import('./pages/Cart'));
+const History = lazy(() => import('./pages/History'));
+const Admin = lazy(() => import('./pages/Admin'));
+const Register = lazy(() => import('./pages/Register'));
+const UserManagement = lazy(() => import('./pages/UserManagement'));
+const Checkout = lazy(() => import('./pages/Checkout'));
+const CheckoutSuccess = lazy(() => import('./pages/CheckoutSuccess'));
+
+function PageFallback() {
+  return (
+    <div className="text-center py-20">
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-boutique-burgundy mx-auto"></div>
+      <p className="mt-4 text-boutique-muted">טוען...</p>
+    </div>
+  );
+}
 
 export default function App() {
   return (
@@ -49,24 +59,24 @@ export default function App() {
           {/* Public routes - Accessible to everyone */}
           <Route path="/" element={<Catalog />} />
           <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
+          <Route path="/register" element={<Suspense fallback={<PageFallback />}><Register /></Suspense>} />
           
           {/* Protected routes - Requires authentication (Any logged-in user) */}
           <Route element={<ProtectedRoute />}>
-            <Route path="/cart" element={<Cart />} />
-            <Route path="/checkout" element={<Checkout />} />
-            <Route path="/checkout-success" element={<CheckoutSuccess />} />
-            <Route path="/history" element={<History />} />
+            <Route path="/cart" element={<Suspense fallback={<PageFallback />}><Cart /></Suspense>} />
+            <Route path="/checkout" element={<Suspense fallback={<PageFallback />}><Checkout /></Suspense>} />
+            <Route path="/checkout-success" element={<Suspense fallback={<PageFallback />}><CheckoutSuccess /></Suspense>} />
+            <Route path="/history" element={<Suspense fallback={<PageFallback />}><History /></Suspense>} />
           </Route>
 
           {/* Admin routes - Requires Admin (1) or Moderator (2) roles */}
           <Route element={<ProtectedRoute allowedRoles={[1, 2]} />}>
-            <Route path="/admin" element={<Admin />} />
+            <Route path="/admin" element={<Suspense fallback={<PageFallback />}><Admin /></Suspense>} />
           </Route>
 
           {/* Super Admin routes - Requires Admin (1) role ONLY */}
           <Route element={<ProtectedRoute allowedRoles={[1]} />}>
-            <Route path="/admin/users" element={<UserManagement />} />
+            <Route path="/admin/users" element={<Suspense fallback={<PageFallback />}><UserManagement /></Suspense>} />
           </Route>
         </Route>
       </Routes>

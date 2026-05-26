@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Truck, FileSpreadsheet, Settings, Mail, CheckCircle, Eye, X, Wine, MapPin, CreditCard, User, Users } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Card from '../components/Card';
@@ -8,90 +8,96 @@ import DashboardCharts from '../components/DashboardCharts';
 import { axiosInstance } from '../api/axios';
 import { useAuthStore } from '../store/useAuthStore';
 
+const statusOptions = [
+  { id: 1, name: 'pending', label: 'ממתין לאישור' },
+  { id: 2, name: 'approved', label: 'אושר' },
+  { id: 3, name: 'delivered', label: 'נשלח' },
+  { id: 4, name: 'completed', label: 'הושלם' },
+];
+
+const extractArray = (data) => {
+  if (!data) return [];
+  if (Array.isArray(data)) return data;
+  if (data.data && Array.isArray(data.data)) return data.data;
+  return [];
+};
+
 export default function Admin() {
   const [bookings, setBookings] = useState([]);
-  const [stats, setStats] = useState({
-    totalOrders: 0,
-    totalRevenue: 0,
-    lowStockProducts: 0,
-    totalUsers: 0
-  });
+  const [lowStockProducts, setLowStockProducts] = useState(0);
+  const [totalUsers, setTotalUsers] = useState(0);
   const [loading, setLoading] = useState(true);
   const [updatingStatus, setUpdatingStatus] = useState(null);
-  
-  // Modal states for order details
+
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
 
-  // Navigation and Auth
   const navigate = useNavigate();
   const { user } = useAuthStore();
-  
-  // Check if user is Super Admin (Role ID 1)
+
   const isSuperAdmin = user?.role?.some(r => r.id === 1);
 
+  const stats = useMemo(() => ({
+    totalOrders: bookings.length,
+    totalRevenue: bookings.reduce((sum, b) => sum + parseFloat(b.total_price || 0), 0),
+    lowStockProducts,
+    totalUsers,
+  }), [bookings, lowStockProducts, totalUsers]);
+
   useEffect(() => {
-    fetchBookings();
-    fetchStats();
-  }, []);
+    let cancelled = false;
 
-  const extractArray = (data) => {
-    if (!data) return [];
-    if (Array.isArray(data)) return data;
-    if (data.data && Array.isArray(data.data)) return data.data;
-    return [];
-  };
-
-  const fetchBookings = async () => {
-    try {
-      const response = await axiosInstance.get('/bookings');
-      setBookings(extractArray(response.data));
-    } catch (error) {
-      console.error('Error fetching bookings:', error);
-    }
-  };
-
-  const fetchStats = async () => {
-    try {
+    const loadAll = async () => {
       setLoading(true);
-      const bookingsResponse = await axiosInstance.get('/bookings');
-      const bookingsData = extractArray(bookingsResponse.data);
+      const [bookingsRes, productsRes, usersRes] = await Promise.allSettled([
+        axiosInstance.get('/bookings'),
+        axiosInstance.get('/products'),
+        axiosInstance.get('/users'),
+      ]);
 
-      const totalOrders = bookingsData.length;
-      const totalRevenue = bookingsData.reduce((sum, booking) => sum + parseFloat(booking.total_price || 0), 0);
+      if (cancelled) return;
 
-      const productsResponse = await axiosInstance.get('/products');
-      const productsData = extractArray(productsResponse.data);
-      const lowStockProducts = productsData.filter(product => product.quantity < 10).length;
-
-      let totalUsers = 0;
-      try {
-        const usersResponse = await axiosInstance.get('/users');
-        const usersData = extractArray(usersResponse.data);
-        totalUsers = usersData.length;
-      } catch (error) {
-        console.log('Could not fetch users count');
+      if (bookingsRes.status === 'fulfilled') {
+        setBookings(extractArray(bookingsRes.value.data));
+      } else {
+        console.error('Error fetching bookings:', bookingsRes.reason);
       }
 
-      setStats({ totalOrders, totalRevenue, lowStockProducts, totalUsers });
-    } catch (error) {
-      console.error('Error fetching stats:', error);
-    } finally {
+      if (productsRes.status === 'fulfilled') {
+        const productsData = extractArray(productsRes.value.data);
+        setLowStockProducts(productsData.filter(p => p.quantity < 10).length);
+      } else {
+        console.error('Error fetching products:', productsRes.reason);
+      }
+
+      if (usersRes.status === 'fulfilled') {
+        setTotalUsers(extractArray(usersRes.value.data).length);
+      }
+
       setLoading(false);
-    }
-  };
+    };
+
+    loadAll();
+    return () => { cancelled = true; };
+  }, []);
 
   const updateBookingStatus = async (bookingId, newStatusId) => {
+    const snapshot = bookings;
+    const newStatusName = statusOptions.find(s => s.id === newStatusId)?.name;
+
+    setBookings(prev => prev.map(b =>
+      b.id === bookingId
+        ? { ...b, status_id: newStatusId, status: { ...(b.status || {}), name: newStatusName || b.status?.name } }
+        : b
+    ));
+    setUpdatingStatus(bookingId);
+
     try {
-      setUpdatingStatus(bookingId);
-      await axiosInstance.put(`/bookings/${bookingId}`, {
-        status_id: newStatusId
-      });
-      await fetchBookings();
-      await fetchStats();
+      await axiosInstance.put(`/bookings/${bookingId}`, { status_id: newStatusId });
     } catch (error) {
       console.error('Error updating status:', error);
       alert('שגיאה בעדכון סטטוס ההזמנה');
+      setBookings(snapshot);
     } finally {
       setUpdatingStatus(null);
     }
@@ -106,13 +112,6 @@ export default function Admin() {
     setIsDetailsModalOpen(false);
     setTimeout(() => setSelectedBooking(null), 200);
   };
-
-  const statusOptions = [
-    { id: 1, name: 'pending', label: 'ממתין לאישור' },
-    { id: 2, name: 'approved', label: 'אושר' },
-    { id: 3, name: 'delivered', label: 'נשלח' },
-    { id: 4, name: 'completed', label: 'הושלם' },
-  ];
 
   if (loading) {
     return (
