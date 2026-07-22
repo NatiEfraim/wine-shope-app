@@ -144,9 +144,10 @@ export default function Admin() {
       </header>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card className="bg-boutique-charcoal border-boutique-gold/30 text-boutique-cream shadow-gold-ring p-6">
-          <p className="text-boutique-gold-light/80 text-sm font-sans mb-1">סה"כ הזמנות</p>
-          <h2 className="text-4xl font-serif font-bold text-boutique-cream">{stats.totalOrders}</h2>
+        {/* Fixed CSS class conflict here so text is visible (removed dark background to match the rest) */}
+        <Card className="p-6">
+          <p className="text-boutique-muted text-sm font-sans mb-1">סה"כ הזמנות</p>
+          <h2 className="text-4xl font-serif font-bold text-boutique-ink">{stats.totalOrders}</h2>
         </Card>
         <Card className="p-6">
           <p className="text-boutique-muted text-sm font-sans mb-1">הכנסות מצטברות</p>
