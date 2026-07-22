@@ -28,9 +28,35 @@ export default function Card({ children, className = '', variant = 'default' }) 
   );
 }
 
+// Smart categorization helper
+const determineCategory = (product) => {
+  // If the backend eventually adds a real category field, use it directly
+  if (product.category) return product.category;
+  
+  // Otherwise, intelligently scan the name and description
+  const text = `${product.name} ${product.description}`.toLowerCase();
+  
+  if (text.includes('רוזה') || text.includes('rosé') || text.includes('rose')) {
+    return 'רוזה';
+  }
+  
+  if (text.includes('מבעבע') || text.includes('sparkling') || text.includes('prosecco') || text.includes('cava') || text.includes('שמפניה')) {
+    return 'מבעבע';
+  }
+  
+  if (text.includes('לבן') || text.includes('white') || text.includes('chardonnay') || text.includes('riesling') || text.includes('gewürztraminer') || text.includes('moscato') || text.includes('viognier') || text.includes('ice wine')) {
+    return 'לבן';
+  }
+  
+  // Default to Red for Cabernet, Merlot, Shiraz, Malbec, etc.
+  return 'אדום';
+};
+
 // Advanced Wine Product Card with Admin Controls support
 export function WineProductCard({ product, onAddToCart, onEdit, onDelete, isAdmin }) {
-  const pillClass = CATEGORY_STYLES[product.category] || CATEGORY_STYLES['אדום'];
+  const actualCategory = determineCategory(product);
+  const pillClass = CATEGORY_STYLES[actualCategory] || CATEGORY_STYLES['אדום'];
+  
   // Use product.image from actual API, fallback if null
   const [imgSrc, setImgSrc] = useState(product.image || CARD_IMAGE_FALLBACK);
   const [failed, setFailed] = useState(false);
@@ -99,7 +125,7 @@ export function WineProductCard({ product, onAddToCart, onEdit, onDelete, isAdmi
         <span
           className={`absolute top-3 right-3 z-10 rounded-full border px-3 py-1 text-[10px] font-medium uppercase tracking-luxury backdrop-blur-sm ${pillClass}`}
         >
-          {product.category || 'אדום'}
+          {actualCategory}
         </span>
 
         {product.limited && (

@@ -2,7 +2,6 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { axiosInstance } from '../api/axios';
 
-// Using persist middleware to save cart to localStorage
 export const useCartStore = create(
   persist(
     (set, get) => ({
@@ -12,7 +11,6 @@ export const useCartStore = create(
         const existing = state.cart.find(p => p.id === product.id);
         if (existing) {
           const newQty = existing.qty + 1;
-          // Check if we have enough stock
           if (product.quantity < newQty) {
             alert(`לא ניתן להוסיף יותר מ-${product.quantity} יחידות מהמוצר הזה`);
             return state;
@@ -21,7 +19,6 @@ export const useCartStore = create(
             cart: state.cart.map(p => p.id === product.id ? { ...p, qty: newQty } : p)
           };
         }
-        // Check stock for new item
         if (product.quantity < 1) {
           alert('המוצר אינו זמין במלאי');
           return state;
@@ -33,7 +30,6 @@ export const useCartStore = create(
         cart: state.cart.map(p => {
           if (p.id === id) {
             const newQty = Math.max(0, p.qty + delta);
-            // Check stock limit
             if (newQty > p.quantity) {
               alert(`לא ניתן להזמין יותר מ-${p.quantity} יחידות מהמוצר הזה`);
               return p;
@@ -57,7 +53,7 @@ export const useCartStore = create(
         return get().cart.reduce((sum, item) => sum + item.qty, 0);
       },
 
-      checkout: async () => {
+      checkout: async (guestData = {}) => {
         const cart = get().cart;
         if (cart.length === 0) return false;
 
@@ -67,7 +63,7 @@ export const useCartStore = create(
             quantity: item.qty
           }));
 
-          const response = await axiosInstance.post('/bookings', { items });
+          const response = await axiosInstance.post('/bookings', { items, ...guestData });
 
           if (response.status === 201) {
             get().clearCart();
@@ -81,8 +77,6 @@ export const useCartStore = create(
         }
       }
     }),
-    {
-      name: 'cart-storage',
-    }
+    { name: 'cart-storage' }
   )
 );
