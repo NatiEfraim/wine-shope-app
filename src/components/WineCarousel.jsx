@@ -31,13 +31,20 @@ const KEN_BURNS_MOVES = [
 
 function CinematicBackground({ slide, index, isVisible }) {
   const [moving, setMoving] = useState(false);
+  const [imgSrc, setImgSrc] = useState(slide.img);
   const move = KEN_BURNS_MOVES[index % KEN_BURNS_MOVES.length];
 
   useEffect(() => {
+    setImgSrc(slide.img);
     setMoving(false);
     const timer = window.setTimeout(() => setMoving(true), 60);
     return () => clearTimeout(timer);
-  }, [slide.id]);
+  }, [slide.id, slide.img]);
+
+  const handleError = () => {
+    // Fallback if the dynamic MinIO URL is broken or expired
+    setImgSrc(CAROUSEL_SLIDES[index % CAROUSEL_SLIDES.length].img);
+  };
 
   return (
     <div
@@ -46,16 +53,18 @@ function CinematicBackground({ slide, index, isVisible }) {
       }`}
     >
       <img
-        src={slide.img}
+        src={imgSrc}
         alt=""
         aria-hidden
+        onError={handleError}
         className={`absolute -inset-6 h-[calc(100%+3rem)] w-[calc(100%+3rem)] origin-center object-cover object-center opacity-30 blur-lg transition-transform duration-[3000ms] ease-out ${
           moving ? move.end : move.start
         }`}
       />
       <img
-        src={slide.img}
+        src={imgSrc}
         alt={slide.title}
+        onError={handleError}
         className={`absolute inset-0 h-full w-full origin-center object-cover object-center transition-transform duration-[3000ms] ease-out ${
           moving ? move.end : move.start
         }`}
@@ -135,7 +144,7 @@ export default function WineCarousel({ dynamicSlides = [], isAuthenticated = fal
   const [activeIndex, setActiveIndex] = useState(0);
   const [previousIndex, setPreviousIndex] = useState(null);
 
-  // Map the dynamic API products to the carousel structure, using the gorgeous background images
+  // Map the dynamic API products to the carousel structure
   const slides = dynamicSlides.length > 0 
     ? dynamicSlides.map((p, i) => ({
         id: p.id,
@@ -146,7 +155,7 @@ export default function WineCarousel({ dynamicSlides = [], isAuthenticated = fal
                   ? `₪${parseFloat(p.price_after_discount).toFixed(2)} (במבצע)` 
                   : `₪${parseFloat(p.price).toFixed(2)}`,
         description: p.description || 'יין בוטיק איכותי ומובחר.',
-        img: CAROUSEL_SLIDES[i % CAROUSEL_SLIDES.length].img
+        img: p.image || CAROUSEL_SLIDES[i % CAROUSEL_SLIDES.length].img
       }))
     : CAROUSEL_SLIDES;
 
