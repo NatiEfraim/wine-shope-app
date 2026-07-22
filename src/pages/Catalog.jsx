@@ -26,18 +26,21 @@ export default function Catalog() {
 
   const addToCart = useCartStore((state) => state.addToCart);
   
-  // Get user and check permissions
-  const { user } = useAuthStore();
+  // Get user, check auth status and permissions
+  const { user, isAuthenticated } = useAuthStore();
   const isManagerOrAdmin = user?.role?.some(r => r.id === 1 || r.id === 2);
 
   useEffect(() => {
     fetchProducts();
-  }, []);
+  }, [isAuthenticated]); // Refetch if login status changes
 
   const fetchProducts = async () => {
     try {
       setLoading(true);
-      const response = await axiosInstance.get('/products');
+      
+      // If user is logged in, fetch tailored recommendations. Otherwise, fetch regular catalog.
+      const endpoint = isAuthenticated ? '/products?recommended=true' : '/products';
+      const response = await axiosInstance.get(endpoint);
       
       // Handle Laravel's possible wrapper ({ data: [...] } or just [...])
       const productsData = response.data.data || response.data || [];
@@ -132,9 +135,13 @@ export default function Catalog() {
   return (
     <section className="animate-in fade-in duration-700">
       
-      {/* Wine Carousel takes full width */}
+      {/* Wine Carousel takes full width and receives the top 5 recommended products */}
       <div className="relative left-1/2 right-1/2 -mx-[50vw] -mt-12 mb-12 w-screen">
-        <WineCarousel />
+        <WineCarousel 
+          dynamicSlides={products.slice(0, 5)} 
+          isAuthenticated={isAuthenticated}
+          onAddToCart={addToCart} 
+        />
       </div>
 
       {/* Styled Header integrated with Admin Actions */}
@@ -174,7 +181,7 @@ export default function Catalog() {
         ))}
       </div>
 
-      {/* Add/Edit Product Modal (Unchanged logical structure, slightly refined colors) */}
+      {/* Add/Edit Product Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-boutique-charcoal/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
           <div className="bg-boutique-cream rounded-sm border border-boutique-gold/20 shadow-2xl w-full max-w-md overflow-hidden" dir="rtl">

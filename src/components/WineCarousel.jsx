@@ -3,7 +3,7 @@ import { Sparkles, ChevronLeft, ChevronRight } from 'lucide-react';
 import { CAROUSEL_SLIDES } from '../data/wineImages';
 
 const MOTION = 'transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]';
-const SLIDE_DURATION = 3000;
+const SLIDE_DURATION = 4000;
 
 // Ken Burns effect movements for background images
 const KEN_BURNS_MOVES = [
@@ -64,7 +64,7 @@ function CinematicBackground({ slide, index, isVisible }) {
   );
 }
 
-function HeroText({ slide, slideKey }) {
+function HeroText({ slide, slideKey, onAddToCart }) {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -110,13 +110,18 @@ function HeroText({ slide, slideKey }) {
       </h2>
 
       <p
-        className={`mt-4 max-w-xl font-sans text-lg font-light text-gray-200 md:text-2xl ${MOTION} delay-[450ms] ${fromLeft}`}
+        className={`mt-4 max-w-xl font-sans text-lg font-light text-gray-200 md:text-2xl line-clamp-3 ${MOTION} delay-[450ms] ${fromLeft}`}
       >
         {slide.description}
       </p>
 
       <button
         type="button"
+        onClick={() => {
+          if (slide.product && onAddToCart) {
+            onAddToCart(slide.product);
+          }
+        }}
         className={`pointer-events-auto group relative mt-8 overflow-hidden border border-boutique-gold/80 px-8 py-3 font-sans text-sm font-medium uppercase tracking-luxury text-boutique-gold-light hover:text-boutique-charcoal ${MOTION} delay-500 ${fromUp}`}
       >
         <span className="relative z-10">לרכישה מיידית</span>
@@ -126,14 +131,29 @@ function HeroText({ slide, slideKey }) {
   );
 }
 
-export default function WineCarousel() {
+export default function WineCarousel({ dynamicSlides = [], isAuthenticated = false, onAddToCart }) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [previousIndex, setPreviousIndex] = useState(null);
-  const activeSlide = CAROUSEL_SLIDES[activeIndex];
+
+  // Map the dynamic API products to the carousel structure, using the gorgeous background images
+  const slides = dynamicSlides.length > 0 
+    ? dynamicSlides.map((p, i) => ({
+        id: p.id,
+        product: p,
+        eyebrow: isAuthenticated ? 'מומלץ במיוחד עבורך' : 'נבחר בקפידה',
+        title: p.name,
+        subTitle: p.price_after_discount && p.price_after_discount < p.price 
+                  ? `₪${parseFloat(p.price_after_discount).toFixed(2)} (במבצע)` 
+                  : `₪${parseFloat(p.price).toFixed(2)}`,
+        description: p.description || 'יין בוטיק איכותי ומובחר.',
+        img: CAROUSEL_SLIDES[i % CAROUSEL_SLIDES.length].img
+      }))
+    : CAROUSEL_SLIDES;
+
+  const activeSlide = slides[activeIndex];
 
   const goToSlide = (index) => {
-    const nextIndex =
-      (index + CAROUSEL_SLIDES.length) % CAROUSEL_SLIDES.length;
+    const nextIndex = (index + slides.length) % slides.length;
     if (nextIndex === activeIndex) return;
     setPreviousIndex(activeIndex);
     setActiveIndex(nextIndex);
@@ -150,7 +170,7 @@ export default function WineCarousel() {
       clearTimeout(previousTimer);
       clearTimeout(slideTimer);
     };
-  }, [activeIndex]);
+  }, [activeIndex, slides.length]);
 
   return (
     <section className="relative h-[clamp(520px,72vh,720px)] w-full overflow-hidden shadow-boutique-lg">
@@ -176,10 +196,10 @@ export default function WineCarousel() {
       />
 
       <div className="absolute inset-0 z-0 overflow-hidden">
-        {previousIndex !== null && (
+        {previousIndex !== null && slides[previousIndex] && (
           <CinematicBackground
-            key={`previous-${CAROUSEL_SLIDES[previousIndex].id}`}
-            slide={CAROUSEL_SLIDES[previousIndex]}
+            key={`previous-${slides[previousIndex].id}`}
+            slide={slides[previousIndex]}
             index={previousIndex}
             isVisible={false}
           />
@@ -198,7 +218,7 @@ export default function WineCarousel() {
       </div>
 
       {activeSlide && (
-        <HeroText key={activeIndex} slide={activeSlide} slideKey={activeIndex} />
+        <HeroText key={activeIndex} slide={activeSlide} slideKey={activeIndex} onAddToCart={onAddToCart} />
       )}
 
       {/* Navigation Buttons */}
@@ -222,7 +242,7 @@ export default function WineCarousel() {
 
       {/* Pagination Dots */}
       <div className="absolute bottom-6 left-1/2 z-30 flex -translate-x-1/2 gap-2">
-        {CAROUSEL_SLIDES.map((slide, index) => (
+        {slides.map((slide, index) => (
           <button
             key={slide.id}
             type="button"
