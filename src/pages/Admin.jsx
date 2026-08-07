@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Truck, FileSpreadsheet, Settings, Mail, CheckCircle, Eye, X, Wine, MapPin, CreditCard, User, Users } from 'lucide-react';
+import { Truck, Settings, Mail, CheckCircle, Eye, X, Wine, MapPin, CreditCard, User, Users, Package, Edit2, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Card from '../components/Card';
 import Badge from '../components/Badge';
@@ -24,6 +24,7 @@ const extractArray = (data) => {
 
 export default function Admin() {
   const [bookings, setBookings] = useState([]);
+  const [products, setProducts] = useState([]);
   const [lowStockProducts, setLowStockProducts] = useState(0);
   const [totalUsers, setTotalUsers] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -31,6 +32,9 @@ export default function Admin() {
 
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+
+  const [editingProduct, setEditingProduct] = useState(null);
+  const [isProductModalOpen, setIsProductModalOpen] = useState(false);
 
   const navigate = useNavigate();
   const { user } = useAuthStore();
@@ -44,45 +48,41 @@ export default function Admin() {
     totalUsers,
   }), [bookings, lowStockProducts, totalUsers]);
 
-  useEffect(() => {
-    let cancelled = false;
-
-    const loadAll = async () => {
-      setLoading(true);
+  const loadAll = async () => {
+    setLoading(true);
+    try {
       const [bookingsRes, productsRes, usersRes] = await Promise.allSettled([
         axiosInstance.get('/bookings'),
         axiosInstance.get('/products'),
         axiosInstance.get('/users'),
       ]);
 
-      if (cancelled) return;
-
       if (bookingsRes.status === 'fulfilled') {
         setBookings(extractArray(bookingsRes.value.data));
-      } else {
-        console.error('Error fetching bookings:', bookingsRes.reason);
       }
 
       if (productsRes.status === 'fulfilled') {
         const productsData = extractArray(productsRes.value.data);
+        setProducts(productsData);
         setLowStockProducts(productsData.filter(p => p.quantity < 10).length);
-      } else {
-        console.error('Error fetching products:', productsRes.reason);
       }
 
       if (usersRes.status === 'fulfilled') {
         setTotalUsers(extractArray(usersRes.value.data).length);
       }
-
+    } catch (error) {
+      console.error('Error loading dashboard data', error);
+    } finally {
       setLoading(false);
-    };
+    }
+  };
 
+  useEffect(() => {
     loadAll();
-    return () => { cancelled = true; };
   }, []);
 
   const updateBookingStatus = async (bookingId, newStatusId) => {
-    const snapshot = bookings;
+    const snapshot = [...bookings];
     const newStatusName = statusOptions.find(s => s.id === newStatusId)?.name;
 
     setBookings(prev => prev.map(b =>
@@ -113,6 +113,47 @@ export default function Admin() {
     setTimeout(() => setSelectedBooking(null), 200);
   };
 
+  const openProductEdit = (product) => {
+    setEditingProduct({
+      id: product.id,
+      name: product.name,
+      price: product.price || 0,
+      discount: product.discount || 0,
+      quantity: product.quantity || 0,
+      description: product.description || ''
+    });
+    setIsProductModalOpen(true);
+  };
+
+  const closeProductModal = () => {
+    setIsProductModalOpen(false);
+    setTimeout(() => setEditingProduct(null), 200);
+  };
+
+  const handleProductUpdate = async (e) => {
+    e.preventDefault();
+    try {
+      await axiosInstance.put(`/products/${editingProduct.id}`, editingProduct);
+      closeProductModal();
+      loadAll(); 
+    } catch (error) {
+      console.error('Error updating product:', error);
+      alert('שגיאה בעדכון המוצר. ודא שכל השדות תקינים.');
+    }
+  };
+
+  const handleDeleteProduct = async (productId, productName) => {
+    if (window.confirm(`האם אתה בטוח שברצונך למחוק את המוצר "${productName}" לצמיתות?`)) {
+      try {
+        await axiosInstance.delete(`/products/${productId}`);
+        loadAll();
+      } catch (error) {
+        console.error('Error deleting product:', error);
+        alert('שגיאה במחיקת המוצר');
+      }
+    }
+  };
+
   if (loading) {
     return (
       <div className="text-center py-20">
@@ -135,7 +176,6 @@ export default function Admin() {
           <p className="text-boutique-muted font-sans text-sm">מעקב אחר פעילות החנות, הזמנות ומלאי</p>
         </div>
         
-        {/* Navigation button for super admins */}
         {isSuperAdmin && (
           <Button onClick={() => navigate('/admin/users')} className="flex items-center gap-2">
             <Users size={18} /> ניהול משתמשים והרשאות
@@ -144,7 +184,6 @@ export default function Admin() {
       </header>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        {/* Fixed CSS class conflict here so text is visible (removed dark background to match the rest) */}
         <Card className="p-6">
           <p className="text-boutique-muted text-sm font-sans mb-1">סה"כ הזמנות</p>
           <h2 className="text-4xl font-serif font-bold text-boutique-ink">{stats.totalOrders}</h2>
@@ -170,16 +209,11 @@ export default function Admin() {
           <h3 className="font-serif text-2xl font-bold flex items-center gap-2 text-boutique-ink">
             <Truck size={22} className="text-boutique-gold-muted" /> ניהול הזמנות
           </h3>
-          <div className="flex gap-2">
-            <Button variant="secondary" className="text-xs bg-white">
-              <FileSpreadsheet size={16}/> ייצוא XLSX
-            </Button>
-          </div>
         </div>
         
-        <div className="overflow-x-auto">
-          <table className="w-full text-right font-sans">
-            <thead className="bg-boutique-cream">
+        <div className="overflow-x-auto max-h-[500px] overflow-y-auto">
+          <table className="w-full text-right font-sans relative">
+            <thead className="bg-boutique-cream sticky top-0 z-10">
               <tr className="text-boutique-muted text-sm border-b border-boutique-linen">
                 <th className="py-4 pr-6 font-medium">מזהה הזמנה</th>
                 <th className="py-4 font-medium">לקוח</th>
@@ -230,7 +264,140 @@ export default function Admin() {
         </div>
       </Card>
 
-      {/* Order Details Modal with Boutique styling */}
+      <Card className="overflow-hidden shadow-boutique mt-8">
+        <div className="flex justify-between items-center p-6 border-b border-boutique-linen bg-boutique-parchment/50">
+          <h3 className="font-serif text-2xl font-bold flex items-center gap-2 text-boutique-ink">
+            <Package size={22} className="text-boutique-gold-muted" /> ניהול קטלוג ומלאי
+          </h3>
+        </div>
+        
+        <div className="overflow-x-auto max-h-[500px] overflow-y-auto">
+          <table className="w-full text-right font-sans relative">
+            <thead className="bg-boutique-cream sticky top-0 z-10">
+              <tr className="text-boutique-muted text-sm border-b border-boutique-linen">
+                <th className="py-4 pr-6 font-medium">מוצר</th>
+                <th className="py-4 font-medium">מק"ט</th>
+                <th className="py-4 font-medium">מלאי</th>
+                <th className="py-4 font-medium">מחיר רגיל</th>
+                <th className="py-4 font-medium">הנחה</th>
+                <th className="py-4 font-medium">מחיר סופי</th>
+                <th className="py-4 font-medium">פעולות</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-boutique-linen bg-white">
+              {products.map(product => {
+                const finalPrice = product.price_after_discount || product.price;
+                const isLowStock = product.quantity < 10;
+                
+                return (
+                  <tr key={product.id} className="hover:bg-boutique-parchment/40 transition-colors">
+                    <td className="py-3 pr-6 font-semibold text-boutique-ink max-w-[200px] truncate" title={product.name}>
+                      {product.name}
+                    </td>
+                    <td className="py-3 text-sm text-boutique-muted">{product.sku}</td>
+                    <td className="py-3">
+                      <span className={`px-2 py-1 rounded-sm text-xs font-bold ${isLowStock ? 'bg-red-100 text-red-700' : 'bg-emerald-100 text-emerald-700'}`}>
+                        {product.quantity}
+                      </span>
+                    </td>
+                    <td className="py-3 text-sm">₪{parseFloat(product.price).toFixed(2)}</td>
+                    <td className="py-3 text-sm text-boutique-burgundy">{product.discount ? `${parseFloat(product.discount).toFixed(2)}%` : '-'}</td>
+                    <td className="py-3 font-bold text-boutique-ink">₪{parseFloat(finalPrice).toFixed(2)}</td>
+                    <td className="py-3">
+                      <div className="flex items-center gap-2">
+                        <button 
+                          onClick={() => openProductEdit(product)}
+                          className="flex items-center gap-1 text-xs text-boutique-gold-muted hover:text-boutique-burgundy transition-colors bg-boutique-cream px-2 py-1.5 rounded-sm border border-boutique-linen hover:border-boutique-burgundy/30"
+                        >
+                          <Edit2 size={14} /> עדכן
+                        </button>
+                        <button 
+                          onClick={() => handleDeleteProduct(product.id, product.name)}
+                          className="flex items-center gap-1 text-xs text-red-500 hover:text-red-700 transition-colors bg-red-50 px-2 py-1.5 rounded-sm border border-red-100 hover:border-red-300"
+                        >
+                          <Trash2 size={14} /> מחק
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+
+      {isProductModalOpen && editingProduct && (
+        <div className="fixed inset-0 bg-boutique-charcoal/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-white rounded-sm shadow-2xl border border-boutique-gold/20 w-full max-w-md flex flex-col overflow-hidden" dir="rtl">
+            <div className="flex justify-between items-center p-5 border-b border-boutique-linen bg-boutique-cream">
+              <h3 className="font-serif font-bold text-xl text-boutique-ink truncate pr-2">עריכת מוצר</h3>
+              <button onClick={closeProductModal} className="p-1 text-boutique-muted hover:text-boutique-burgundy transition-colors">
+                <X size={20} />
+              </button>
+            </div>
+            
+            <form onSubmit={handleProductUpdate} className="p-5 space-y-4">
+              <div>
+                <label className="block text-sm font-semibold text-boutique-ink mb-1">שם מוצר</label>
+                <input 
+                  type="text" required 
+                  value={editingProduct.name} 
+                  onChange={e => setEditingProduct({...editingProduct, name: e.target.value})}
+                  className="w-full border border-boutique-linen bg-white py-2 px-3 text-boutique-ink outline-none focus:border-boutique-gold focus:ring-1 focus:ring-boutique-gold transition-all"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-semibold text-boutique-ink mb-1">כמות במלאי</label>
+                  <input 
+                    type="number" min="0" required 
+                    value={editingProduct.quantity} 
+                    onChange={e => setEditingProduct({...editingProduct, quantity: e.target.value})}
+                    className="w-full border border-boutique-linen bg-white py-2 px-3 text-boutique-ink outline-none focus:border-boutique-gold focus:ring-1 focus:ring-boutique-gold transition-all"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-boutique-ink mb-1">מחיר מקורי (₪)</label>
+                  <input 
+                    type="number" min="0" step="0.01" required 
+                    value={editingProduct.price} 
+                    onChange={e => setEditingProduct({...editingProduct, price: e.target.value})}
+                    className="w-full border border-boutique-linen bg-white py-2 px-3 text-boutique-ink outline-none focus:border-boutique-gold focus:ring-1 focus:ring-boutique-gold transition-all"
+                  />
+                </div>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-semibold text-boutique-ink mb-1">הנחה (%)</label>
+                <input 
+                  type="number" min="0" max="100" step="0.01" 
+                  value={editingProduct.discount} 
+                  onChange={e => setEditingProduct({...editingProduct, discount: e.target.value})}
+                  className="w-full border border-boutique-linen bg-white py-2 px-3 text-boutique-ink outline-none focus:border-boutique-gold focus:ring-1 focus:ring-boutique-gold transition-all"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-boutique-ink mb-1">תיאור מוצר</label>
+                <textarea 
+                  rows="3"
+                  value={editingProduct.description} 
+                  onChange={e => setEditingProduct({...editingProduct, description: e.target.value})}
+                  className="w-full border border-boutique-linen bg-white py-2 px-3 text-boutique-ink outline-none focus:border-boutique-gold focus:ring-1 focus:ring-boutique-gold transition-all resize-none"
+                ></textarea>
+              </div>
+
+              <div className="pt-4 flex gap-3 border-t border-boutique-linen mt-6">
+                <Button type="submit" className="flex-1">שמור שינויים</Button>
+                <Button type="button" variant="secondary" onClick={closeProductModal} className="flex-1">ביטול</Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {isDetailsModalOpen && selectedBooking && (
         <div className="fixed inset-0 bg-boutique-charcoal/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in">
           <div className="bg-boutique-cream rounded-sm shadow-2xl border border-boutique-gold/20 w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-300" dir="rtl">
@@ -247,7 +414,6 @@ export default function Admin() {
             
             <div className="p-6 overflow-y-auto flex-1 font-sans">
               
-              {/* Customer Info Box */}
               <div className="bg-white p-5 rounded-sm border border-boutique-linen mb-6 flex items-start gap-4 shadow-sm">
                 <div className="bg-boutique-burgundy text-boutique-cream p-3 rounded-full shrink-0"><User size={20}/></div>
                 <div className="grid grid-cols-2 gap-x-12 gap-y-3 w-full">
@@ -257,20 +423,19 @@ export default function Admin() {
                   </div>
                   <div>
                     <p className="text-[10px] text-boutique-gold-muted font-medium uppercase tracking-luxury">ת.ז.</p>
-                    <p className="font-semibold text-boutique-ink">{selectedBooking.user?.personal_id}</p>
+                    <p className="font-semibold text-boutique-ink">{selectedBooking.user?.personal_id || '-'}</p>
                   </div>
                   <div>
                     <p className="text-[10px] text-boutique-gold-muted font-medium uppercase tracking-luxury">אימייל</p>
-                    <p className="text-sm text-boutique-ink">{selectedBooking.user?.email}</p>
+                    <p className="text-sm text-boutique-ink">{selectedBooking.user?.email || '-'}</p>
                   </div>
                   <div>
                     <p className="text-[10px] text-boutique-gold-muted font-medium uppercase tracking-luxury">טלפון</p>
-                    <p className="text-sm text-boutique-ink">{selectedBooking.user?.phone}</p>
+                    <p className="text-sm text-boutique-ink">{selectedBooking.user?.phone || '-'}</p>
                   </div>
                 </div>
               </div>
 
-              {/* Status & Total Info */}
               <div className="grid grid-cols-2 gap-4 mb-8">
                  <div className="bg-white p-5 rounded-sm border border-boutique-linen flex items-start gap-3 shadow-sm">
                     <MapPin className="text-boutique-gold-muted mt-1" size={20} />

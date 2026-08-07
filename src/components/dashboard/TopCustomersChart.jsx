@@ -4,6 +4,7 @@ import { Users, Crown, Repeat, Wallet, ArrowLeft } from 'lucide-react';
 import Card from '../Card';
 import EmptyState from './EmptyState';
 import { BOUTIQUE, currencyFmt } from './constants';
+import { useAuthStore } from '../../store/useAuthStore';
 
 function TopCustomersList({ data }) {
   const maxRevenue = Math.max(...data.map((c) => c.revenue), 1);
@@ -114,6 +115,9 @@ function CustomerKpis({ kpis }) {
 }
 
 export default function TopCustomersChart({ data, kpis, hasCustomers }) {
+  const { user } = useAuthStore();
+  const isSuperAdmin = user?.role?.some(r => r.id === 1);
+
   return (
     <Card className="p-6">
       <div className="flex items-start justify-between mb-6 gap-4">
@@ -131,13 +135,16 @@ export default function TopCustomersChart({ data, kpis, hasCustomers }) {
               : 'אין עדיין לקוחות עם הזמנות'}
           </p>
         </div>
-        <Link
-          to="/admin/users"
-          className="shrink-0 flex items-center gap-1.5 text-xs font-sans font-medium text-boutique-burgundy hover:text-boutique-burgundy-dark transition-colors group"
-        >
-          כל הלקוחות
-          <ArrowLeft size={14} className="transition-transform group-hover:-translate-x-0.5" />
-        </Link>
+        
+        {isSuperAdmin && (
+          <Link
+            to="/admin/users"
+            className="shrink-0 flex items-center gap-1.5 text-xs font-sans font-medium text-boutique-burgundy hover:text-boutique-burgundy-dark transition-colors group"
+          >
+            כל הלקוחות
+            <ArrowLeft size={14} className="transition-transform group-hover:-translate-x-0.5" />
+          </Link>
+        )}
       </div>
 
       {hasCustomers ? (
